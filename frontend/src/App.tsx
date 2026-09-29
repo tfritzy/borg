@@ -1,5 +1,7 @@
+import { Game } from "./Game";
+
 function App() {
-  return <div>Hellor</div>;
+  return <Game />;
 }
 
 export default App;
