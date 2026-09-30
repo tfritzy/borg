@@ -1,19 +1,19 @@
 spacetime generate --lang typescript --out-dir frontend/module_bindings --module-path backend
 
-spacetime sql typar_io "SELECT * from player" -s maincloud typar_io
+spacetime sql typar "SELECT * from player" -s maincloud typar
 
 spacetime publish typar -s local --module-path backend
 
 RUN MIGRATIONS:
-spacetime call typar_io RunMigrations --server maincloud
+spacetime call typar RunMigrations --server maincloud
 
 QA ENVIRONMENT DEPLOYMENT:
 spacetime publish -c -y --project-path back
-nd --server maincloud typar_io-qa
+nd --server maincloud typar-qa
 spacetime generate --lang typescript --out-dir frontend/module_bindings --project-path backend
 cd frontend && npm run build -- --mode qa
 firebase deploy --only hosting:qa
 
 PROD:
-spacetime publish --project-path backend --server maincloud typar_io
+spacetime publish --project-path backend --server maincloud typar
 firebase deploy --only hosting:production

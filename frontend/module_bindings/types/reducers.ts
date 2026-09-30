@@ -6,5 +6,7 @@
 import { type Infer as __Infer } from "spacetimedb";
 
 // Import all reducer arg schemas
+import MovePlayerReducer from "../move_player_reducer";
 
+export type MovePlayerParams = __Infer<typeof MovePlayerReducer>;
 
