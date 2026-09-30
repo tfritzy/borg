@@ -1,23 +1,35 @@
 import { useEffect, useRef } from "react";
 import { WorldRenderer } from "./rendering/WorldRenderer";
 import { World } from "./state/world";
-import { Entity } from "./state/Entity";
-import { Vector2 } from "./util/Vector2";
 import { update } from "./control/update";
+import { Database } from "./util/db";
+import { setupPlayerSubscription } from "./subscription/player";
 
 export function Game() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const stateRef = useRef<World>(new World());
 
   useEffect(() => {
+    const database = new Database();
     const canvas = canvasRef.current;
     const world = stateRef.current;
     if (!canvas || !world) return;
 
-    const player = new Entity("player", new Vector2(10, 20));
-    world.entities.set(player.id, player);
-
     const renderer = new WorldRenderer(canvas, world);
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
+
+    database
+      .connect()
+      .then((connection) => {
+        if (!active) return;
+
+        unsubscribe = setupPlayerSubscription(connection, world);
+        if (!active) unsubscribe();
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to connect to SpacetimeDB", error);
+      });
 
     let frameId: number;
     const loop = () => {
@@ -27,6 +39,8 @@ export function Game() {
     frameId = requestAnimationFrame(loop);
 
     return () => {
+      active = false;
+      unsubscribe?.();
       cancelAnimationFrame(frameId);
       renderer.dispose();
     };
