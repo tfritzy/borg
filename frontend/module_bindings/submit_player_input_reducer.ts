@@ -10,13 +10,9 @@ import {
   type Infer as __Infer,
 } from "spacetimedb";
 
-export default __t.row({
-  identity: __t.identity().primaryKey(),
-  x: __t.f32(),
-  y: __t.f32(),
-  vx: __t.f32(),
-  vy: __t.f32(),
+export default {
+  inputTick: __t.u64(),
+  moveX: __t.f32(),
+  moveY: __t.f32(),
   buttons: __t.u32(),
-  serverTick: __t.u64().name("server_tick"),
-  lastProcessedInputTick: __t.u64().name("last_processed_input_tick"),
-});
+};

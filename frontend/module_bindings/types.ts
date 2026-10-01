@@ -10,10 +10,42 @@ import {
   type Infer as __Infer,
 } from "spacetimedb";
 
+export const InputFrame = __t.object("InputFrame", {
+  inputTick: __t.u64(),
+  moveX: __t.f32(),
+  moveY: __t.f32(),
+  buttons: __t.u32(),
+});
+export type InputFrame = __Infer<typeof InputFrame>;
+
 export const Player = __t.object("Player", {
   identity: __t.identity(),
   x: __t.f32(),
   y: __t.f32(),
+  vx: __t.f32(),
+  vy: __t.f32(),
+  buttons: __t.u32(),
+  serverTick: __t.u64(),
+  lastProcessedInputTick: __t.u64(),
 });
 export type Player = __Infer<typeof Player>;
+
+export const PlayerInputBuffer = __t.object("PlayerInputBuffer", {
+  identity: __t.identity(),
+  connectionId: __t.connectionId(),
+  get activeInput() {
+    return __t.option(InputFrame);
+  },
+  get inputs() {
+    return __t.array(InputFrame);
+  },
+});
+export type PlayerInputBuffer = __Infer<typeof PlayerInputBuffer>;
+
+export const SimulationTimer = __t.object("SimulationTimer", {
+  scheduledId: __t.u64(),
+  scheduledAt: __t.scheduleAt(),
+  serverTick: __t.u64(),
+});
+export type SimulationTimer = __Infer<typeof SimulationTimer>;
 
