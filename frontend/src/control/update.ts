@@ -1,8 +1,5 @@
 import type { World } from "../state/world";
 
 export function update(world: World): void {
-  const time = performance.now();
-  const deltaTime = time - world.time;
-
-  world.time = time;
+  world.time = performance.now();
 }

@@ -57,15 +57,21 @@ export class WorldRenderer {
   private render() {
     const { ctx, canvas } = this;
     const dpr = window.devicePixelRatio || 1;
+    const width = canvas.width / dpr;
+    const height = canvas.height / dpr;
+    const origin = {
+      x: width / 2 - this.offset.x,
+      y: height / 2 + this.offset.y,
+    };
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+    ctx.clearRect(0, 0, width, height);
 
-    this.background.render(this.offset);
+    this.background.render(origin);
 
     for (const entity of this.world.entities.values()) {
-      const x = entity.position.x - this.offset.x;
-      const y = entity.position.y - this.offset.y;
+      const x = origin.x + entity.position.x;
+      const y = origin.y - entity.position.y;
 
       ctx.beginPath();
       ctx.arc(x, y, 10, 0, Math.PI * 2);

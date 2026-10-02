@@ -7,7 +7,7 @@ export class Background {
     this.ctx = ctx;
   }
 
-  render(offset: { x: number; y: number }) {
+  render(origin: { x: number; y: number }) {
     const { ctx, canvas } = this;
     const dpr = window.devicePixelRatio || 1;
 
@@ -17,8 +17,8 @@ export class Background {
 
     // Grid
     const gridSize = 32;
-    const startX = -(((offset.x % gridSize) + gridSize) % gridSize);
-    const startY = -(((offset.y % gridSize) + gridSize) % gridSize);
+    const startX = ((origin.x % gridSize) + gridSize) % gridSize;
+    const startY = ((origin.y % gridSize) + gridSize) % gridSize;
 
     ctx.strokeStyle = "rgba(0, 0, 0, 0.12)";
     ctx.lineWidth = 1;
