@@ -1,4 +1,4 @@
-import type { DbConnection, SubscriptionHandle } from "../../module_bindings";
+import type { DbConnection } from "../../module_bindings";
 import { Entity } from "../state/Entity";
 import type { World } from "../state/world";
 import type { Player } from "../types";
@@ -57,7 +57,6 @@ export class PlayerController {
   private readonly identity: string;
   private readonly keys = new Set<string>();
   private readonly pendingInputs: InputFrame[] = [];
-  private readonly subscription: SubscriptionHandle;
   private player: Entity | undefined;
   private state: MovementState | undefined;
   private nextInputTick = 0n;
@@ -76,14 +75,6 @@ export class PlayerController {
     connection.db.player.onInsert(this.onPlayerInsert);
     connection.db.player.onUpdate(this.onPlayerUpdate);
     connection.db.player.onDelete(this.onPlayerDelete);
-    this.subscription = connection
-      .subscriptionBuilder()
-      .onApplied(() => {
-        if (this.disposed) return;
-        for (const player of connection.db.player.iter()) this.syncPlayer(player);
-      })
-      .subscribe(["SELECT * FROM player"]);
-
     document.addEventListener("keydown", this.onKeyDown);
     document.addEventListener("keyup", this.onKeyUp);
     window.addEventListener("blur", this.releaseKeys);
@@ -105,32 +96,27 @@ export class PlayerController {
   private readonly onPlayerDelete = (_ctx: unknown, player: Player) => {
     if (this.disposed) return;
     const identity = player.identity.toHexString();
+    if (identity !== this.identity) return;
     this.world.entities.delete(identity);
-    if (identity === this.identity) {
-      this.player = undefined;
-      this.state = undefined;
-      this.pendingInputs.length = 0;
-      this.nextInputTick = 0n;
-      this.lastMoveX = 0;
-      this.lastMoveY = 0;
-      this.needsInputRetry = false;
-      this.accumulatedMs = 0;
-    }
+    this.player = undefined;
+    this.state = undefined;
+    this.pendingInputs.length = 0;
+    this.nextInputTick = 0n;
+    this.lastMoveX = 0;
+    this.lastMoveY = 0;
+    this.needsInputRetry = false;
+    this.accumulatedMs = 0;
   };
 
   private syncPlayer(player: Player): void {
+    if (this.disposed) return;
     const identity = player.identity.toHexString();
+    if (identity !== this.identity) return;
     let entity = this.world.entities.get(identity);
     if (!entity) {
       entity = new Entity("player", new Vector2());
       entity.id = identity;
       this.world.entities.set(identity, entity);
-    }
-
-    if (identity !== this.identity) {
-      entity.position.x = player.x;
-      entity.position.y = player.y;
-      return;
     }
 
     this.player = entity;
@@ -258,6 +244,5 @@ export class PlayerController {
     this.connection.db.player.removeOnInsert(this.onPlayerInsert);
     this.connection.db.player.removeOnUpdate(this.onPlayerUpdate);
     this.connection.db.player.removeOnDelete(this.onPlayerDelete);
-    this.subscription.unsubscribe();
   }
 }
