@@ -13,6 +13,5 @@ pub struct PlayerInputBuffer {
     #[primary_key]
     pub(crate) identity: Identity,
     pub(crate) connection_id: ConnectionId,
-    pub(crate) active_input: Option<InputFrame>,
     pub(crate) inputs: Vec<InputFrame>,
 }

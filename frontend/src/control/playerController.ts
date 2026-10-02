@@ -1,16 +1,12 @@
 import type { DbConnection } from "../../module_bindings";
-import { Entity } from "../state/Entity";
+import { Player as PlayerEntity } from "../state/Player";
 import type { World } from "../state/world";
 import type { Player } from "../types";
 import { Vector2 } from "../util/Vector2";
+import { advance, STEP_MS, type MovementState } from "./movement";
 
-const STEP_SECONDS = 1 / 60;
-const STEP_MS = 1000 / 60;
 const MAX_FRAME_MS = 250;
 const MAX_PENDING_INPUTS = 120;
-const MAX_SPEED = 60;
-const ACCELERATION = 240;
-const FRICTION = 360;
 
 const MOVEMENT_KEYS = new Set([
   "w", "a", "s", "d",
@@ -23,46 +19,16 @@ type InputFrame = {
   moveY: number;
 };
 
-type MovementState = {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-};
-
-function advance(state: MovementState, moveX: number, moveY: number): void {
-  const targetVx = moveX * MAX_SPEED;
-  const targetVy = moveY * MAX_SPEED;
-  const acceleration = moveX === 0 && moveY === 0 ? FRICTION : ACCELERATION;
-  const dx = targetVx - state.vx;
-  const dy = targetVy - state.vy;
-  const distance = Math.hypot(dx, dy);
-  const maxDelta = acceleration * STEP_SECONDS;
-
-  if (distance <= maxDelta) {
-    state.vx = targetVx;
-    state.vy = targetVy;
-  } else {
-    state.vx += (dx / distance) * maxDelta;
-    state.vy += (dy / distance) * maxDelta;
-  }
-
-  state.x += state.vx * STEP_SECONDS;
-  state.y += state.vy * STEP_SECONDS;
-}
-
 export class PlayerController {
   private readonly connection: DbConnection;
   private readonly world: World;
   private readonly identity: string;
   private readonly keys = new Set<string>();
   private readonly pendingInputs: InputFrame[] = [];
-  private player: Entity | undefined;
+  private player: PlayerEntity | undefined;
   private state: MovementState | undefined;
+  private previousState: MovementState | undefined;
   private nextInputTick = 0n;
-  private lastMoveX = 0;
-  private lastMoveY = 0;
-  private needsInputRetry = false;
   private lastTime = performance.now();
   private accumulatedMs = 0;
   private disposed = false;
@@ -100,11 +66,9 @@ export class PlayerController {
     this.world.entities.delete(identity);
     this.player = undefined;
     this.state = undefined;
+    this.previousState = undefined;
     this.pendingInputs.length = 0;
     this.nextInputTick = 0n;
-    this.lastMoveX = 0;
-    this.lastMoveY = 0;
-    this.needsInputRetry = false;
     this.accumulatedMs = 0;
   };
 
@@ -112,9 +76,9 @@ export class PlayerController {
     if (this.disposed) return;
     const identity = player.identity.toHexString();
     if (identity !== this.identity) return;
-    let entity = this.world.entities.get(identity);
-    if (!entity) {
-      entity = new Entity("player", new Vector2());
+    const existing = this.world.entities.get(identity);
+    const entity = existing instanceof PlayerEntity ? existing : new PlayerEntity(new Vector2());
+    if (entity !== existing) {
       entity.id = identity;
       this.world.entities.set(identity, entity);
     }
@@ -139,14 +103,32 @@ export class PlayerController {
     for (const input of this.pendingInputs) {
       advance(state, input.moveX, input.moveY);
     }
+    if (this.previousState && this.state) {
+      // Correct both interpolation endpoints so an acknowledgement does not
+      // collapse the render interval or move the player ahead by one tick.
+      this.previousState.x += state.x - this.state.x;
+      this.previousState.y += state.y - this.state.y;
+      this.previousState.vx += state.vx - this.state.vx;
+      this.previousState.vy += state.vy - this.state.vy;
+    } else {
+      this.previousState = { ...state };
+      this.lastTime = performance.now();
+      this.accumulatedMs = 0;
+    }
     this.state = state;
     this.writePosition();
   }
 
   private writePosition(): void {
-    if (!this.player || !this.state) return;
-    this.player.position.x = this.state.x;
-    this.player.position.y = this.state.y;
+    if (!this.player || !this.state || !this.previousState) return;
+    const alpha = this.accumulatedMs / STEP_MS;
+    this.player.position.x = this.previousState.x
+      + (this.state.x - this.previousState.x) * alpha;
+    this.player.position.y = this.previousState.y
+      + (this.state.y - this.previousState.y) * alpha;
+    const vx = this.previousState.vx + (this.state.vx - this.previousState.vx) * alpha;
+    const vy = this.previousState.vy + (this.state.vy - this.previousState.vy) * alpha;
+    this.player.faceVelocity(vx, vy);
   }
 
   private readonly onKeyDown = (event: KeyboardEvent) => {
@@ -165,14 +147,12 @@ export class PlayerController {
 
   private readonly onVisibilityChange = () => {
     if (document.hidden) this.releaseKeys();
+    this.lastTime = performance.now();
+    this.accumulatedMs = 0;
   };
 
   private readonly releaseKeys = () => {
     this.keys.clear();
-    // The server holds the last input, so release it even if animation is paused.
-    if (this.lastMoveX !== 0 || this.lastMoveY !== 0 || this.needsInputRetry) {
-      this.submitInput(0, 0, true);
-    }
   };
 
   update(time: number): void {
@@ -194,30 +174,22 @@ export class PlayerController {
       const x = length > 1 ? moveX / length : moveX;
       const y = length > 1 ? moveY / length : moveY;
 
-      if (this.pendingInputs.length >= MAX_PENDING_INPUTS) break;
-      if (x !== 0 || y !== 0 || this.state.vx !== 0 || this.state.vy !== 0
-        || this.lastMoveX !== x || this.lastMoveY !== y || this.needsInputRetry) {
-        this.submitInput(x, y);
-      } else {
-        advance(this.state, 0, 0);
-        this.writePosition();
+      if (this.pendingInputs.length >= MAX_PENDING_INPUTS) {
+        this.accumulatedMs = 0;
+        this.previousState = { ...this.state };
+        break;
       }
+      this.previousState = { ...this.state };
+      this.submitInput(x, y);
     }
+    this.writePosition();
   }
 
-  private submitInput(moveX: number, moveY: number, release = false): void {
+  private submitInput(moveX: number, moveY: number): void {
     if (!this.state || !this.connection.isActive) return;
-    if (this.pendingInputs.length >= MAX_PENDING_INPUTS) {
-      if (!release) return;
-      this.pendingInputs.shift();
-    }
     const input = { tick: ++this.nextInputTick, moveX, moveY };
     this.pendingInputs.push(input);
-    this.lastMoveX = moveX;
-    this.lastMoveY = moveY;
-    this.needsInputRetry = false;
     advance(this.state, moveX, moveY);
-    this.writePosition();
     void this.connection.reducers.submitPlayerInput({
       inputTick: input.tick,
       moveX,
@@ -227,7 +199,6 @@ export class PlayerController {
       const index = this.pendingInputs.indexOf(input);
       if (index !== -1) this.pendingInputs.splice(index, 1);
       if (!this.disposed) {
-        if (input.tick === this.nextInputTick) this.needsInputRetry = true;
         console.error("Failed to submit player input", error);
       }
     });

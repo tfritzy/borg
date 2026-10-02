@@ -1,4 +1,4 @@
-use crate::tables::{player_input_buffer, InputFrame};
+use crate::tables::{player, player_input_buffer, InputFrame};
 use spacetimedb::ReducerContext;
 
 const MAX_BUFFERED_INPUTS: usize = 120;
@@ -34,13 +34,19 @@ pub fn submit_player_input(
         return Err("Movement axes must be finite numbers".into());
     }
 
-    if let Some(latest_input) = buffer.inputs.last() {
-        if input_tick == latest_input.input_tick {
-            return Ok(());
-        }
-        if input_tick < latest_input.input_tick {
-            return Err("Input ticks must increase monotonically".into());
-        }
+    let last_processed = ctx
+        .db
+        .player()
+        .identity()
+        .find(identity)
+        .ok_or_else(|| "Player is not connected".to_string())?
+        .last_processed_input_tick;
+    let last_received = buffer
+        .inputs
+        .last()
+        .map_or(last_processed, |input| input.input_tick);
+    if input_tick <= last_received {
+        return Ok(());
     }
     if buffer.inputs.len() >= MAX_BUFFERED_INPUTS {
         return Err("Player input buffer is full".into());

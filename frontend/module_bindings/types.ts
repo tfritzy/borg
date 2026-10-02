@@ -33,9 +33,6 @@ export type Player = __Infer<typeof Player>;
 export const PlayerInputBuffer = __t.object("PlayerInputBuffer", {
   identity: __t.identity(),
   connectionId: __t.connectionId(),
-  get activeInput() {
-    return __t.option(InputFrame);
-  },
   get inputs() {
     return __t.array(InputFrame);
   },

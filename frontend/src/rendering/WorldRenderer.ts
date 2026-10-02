@@ -5,7 +5,6 @@ export class WorldRenderer {
   world: World;
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
-  private animationFrame: number | null = null;
   private resizeObserver: ResizeObserver | null = null;
   private offset = { x: 0, y: 0 };
   private background: Background;
@@ -22,8 +21,6 @@ export class WorldRenderer {
     this.resize();
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(canvas);
-
-    this.start();
   }
 
   private resize() {
@@ -33,28 +30,12 @@ export class WorldRenderer {
     this.canvas.height = Math.round(rect.height * dpr);
   }
 
-  start() {
-    if (this.animationFrame !== null) return;
-    const loop = () => {
-      this.render();
-      this.animationFrame = requestAnimationFrame(loop);
-    };
-    this.animationFrame = requestAnimationFrame(loop);
-  }
-
-  stop() {
-    if (this.animationFrame !== null) {
-      cancelAnimationFrame(this.animationFrame);
-      this.animationFrame = null;
-    }
-  }
-
   setOffset(x: number, y: number) {
     this.offset.x = x;
     this.offset.y = y;
   }
 
-  private render() {
+  render() {
     const { ctx, canvas } = this;
     const dpr = window.devicePixelRatio || 1;
     const width = canvas.width / dpr;
@@ -73,15 +54,25 @@ export class WorldRenderer {
       const x = origin.x + entity.position.x;
       const y = origin.y - entity.position.y;
 
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(Math.PI / 2 - entity.rotation);
+      ctx.lineJoin = "round";
+      ctx.lineWidth = 1.25;
+
       ctx.beginPath();
-      ctx.arc(x, y, 10, 0, Math.PI * 2);
-      ctx.fillStyle = "#ff5555";
-      ctx.fill();
+      ctx.moveTo(0, -10);
+      ctx.lineTo(7, 7);
+      ctx.lineTo(0, 4);
+      ctx.lineTo(-7, 7);
+      ctx.closePath();
+      ctx.strokeStyle = "#1f2937";
+      ctx.stroke();
+      ctx.restore();
     }
   }
 
   dispose() {
-    this.stop();
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
   }

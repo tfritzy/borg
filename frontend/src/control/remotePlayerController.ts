@@ -1,5 +1,5 @@
 import type { DbConnection } from "../../module_bindings";
-import { Entity } from "../state/Entity";
+import { Player as PlayerEntity } from "../state/Player";
 import type { World } from "../state/world";
 import type { Player } from "../types";
 import { Vector2 } from "../util/Vector2";
@@ -11,6 +11,8 @@ const MAX_SNAPSHOTS = 32;
 type Snapshot = {
   x: number;
   y: number;
+  vx: number;
+  vy: number;
   serverTick: bigint;
   receivedAt: number;
 };
@@ -58,8 +60,8 @@ export class RemotePlayerController {
     if (identity === this.identity) return;
 
     let entity = this.world.entities.get(identity);
-    if (!entity) {
-      entity = new Entity("player", new Vector2(player.x, player.y));
+    if (!(entity instanceof PlayerEntity)) {
+      entity = new PlayerEntity(new Vector2(player.x, player.y));
       entity.id = identity;
       this.world.entities.set(identity, entity);
     }
@@ -71,16 +73,17 @@ export class RemotePlayerController {
     for (const identity of this.snapshots.keys()) {
       const entity = this.world.entities.get(identity);
       const position = this.sampleSnapshot(identity, time);
-      if (entity && position) {
+      if (entity instanceof PlayerEntity && position) {
         entity.position.x = position.x;
         entity.position.y = position.y;
+        entity.faceVelocity(position.vx, position.vy);
       }
     }
   }
 
   private recordSnapshot(
     identity: string,
-    position: Pick<Player, "x" | "y" | "serverTick">,
+    position: Pick<Player, "x" | "y" | "vx" | "vy" | "serverTick">,
     receivedAt: number,
   ): void {
     let history = this.snapshots.get(identity);
@@ -106,13 +109,15 @@ export class RemotePlayerController {
     history.push({
       x: position.x,
       y: position.y,
+      vx: position.vx,
+      vy: position.vy,
       serverTick: position.serverTick,
       receivedAt,
     });
     while (history.length > MAX_SNAPSHOTS) history.shift();
   }
 
-  private sampleSnapshot(identity: string, time: number): { x: number; y: number } | undefined {
+  private sampleSnapshot(identity: string, time: number): Pick<Snapshot, "x" | "y" | "vx" | "vy"> | undefined {
     const history = this.snapshots.get(identity);
     if (!history?.length) return undefined;
 
@@ -122,7 +127,7 @@ export class RemotePlayerController {
     }
 
     const first = history[0];
-    if (renderTime <= first.receivedAt) return { x: first.x, y: first.y };
+    if (renderTime <= first.receivedAt) return first;
 
     for (let i = 1; i < history.length; i++) {
       const next = history[i];
@@ -136,12 +141,14 @@ export class RemotePlayerController {
       return {
         x: previous.x + (next.x - previous.x) * fraction,
         y: previous.y + (next.y - previous.y) * fraction,
+        vx: previous.vx + (next.vx - previous.vx) * fraction,
+        vy: previous.vy + (next.vy - previous.vy) * fraction,
       };
     }
 
     // Wait at the newest known position if the next server update is late.
     const last = history[history.length - 1];
-    return { x: last.x, y: last.y };
+    return last;
   }
 
   dispose(): void {

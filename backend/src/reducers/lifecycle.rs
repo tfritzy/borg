@@ -34,7 +34,6 @@ pub fn identity_connected(ctx: &ReducerContext) {
     let input_buffer = PlayerInputBuffer {
         identity,
         connection_id,
-        active_input: None,
         inputs: Vec::new(),
     };
     if ctx

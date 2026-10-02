@@ -11,11 +11,9 @@ export class Background {
     const { ctx, canvas } = this;
     const dpr = window.devicePixelRatio || 1;
 
-    // Background
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
 
-    // Grid
     const gridSize = 32;
     const startX = ((origin.x % gridSize) + gridSize) % gridSize;
     const startY = ((origin.y % gridSize) + gridSize) % gridSize;

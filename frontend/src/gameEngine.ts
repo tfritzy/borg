@@ -1,7 +1,6 @@
 import type { SubscriptionHandle } from "../module_bindings";
 import { PlayerController } from "./control/playerController";
 import { RemotePlayerController } from "./control/remotePlayerController";
-import { update } from "./control/update";
 import { World } from "./state/world";
 import { Database } from "./util/db";
 import { subscribeToPlayers } from "./util/subscriptions";
@@ -20,7 +19,7 @@ export class GameEngine {
     this.database = database;
   }
 
-  start(): void {
+  start(render: () => void): void {
     if (this.active) return;
     this.active = true;
 
@@ -38,11 +37,12 @@ export class GameEngine {
         }
       });
 
-    const loop = () => {
+    const loop = (time: number) => {
       if (!this.active) return;
-      update(this.world);
+      this.world.time = time;
       this.playerController?.update(this.world.time);
       this.remotePlayerController?.update(this.world.time);
+      render();
       this.frameId = requestAnimationFrame(loop);
     };
     this.frameId = requestAnimationFrame(loop);

@@ -6,9 +6,7 @@
 import { type Infer as __Infer } from "spacetimedb";
 
 // Import all reducer arg schemas
-import MovePlayerReducer from "../move_player_reducer";
 import SubmitPlayerInputReducer from "../submit_player_input_reducer";
 
-export type MovePlayerParams = __Infer<typeof MovePlayerReducer>;
 export type SubmitPlayerInputParams = __Infer<typeof SubmitPlayerInputReducer>;
 
