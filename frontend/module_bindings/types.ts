@@ -30,15 +30,25 @@ export type PlayerInputBuffer = __Infer<typeof PlayerInputBuffer>;
 export const Ship = __t.object("Ship", {
   id: __t.u64(),
   owner: __t.option(__t.identity()),
+  get shipType() {
+    return ShipType;
+  },
   x: __t.f32(),
   y: __t.f32(),
   vx: __t.f32(),
   vy: __t.f32(),
-  buttons: __t.u32(),
+  buttons: __t.option(__t.u32()),
   serverTick: __t.u64(),
-  lastProcessedInputTick: __t.u64(),
+  lastProcessedInputTick: __t.option(__t.u64()),
 });
 export type Ship = __Infer<typeof Ship>;
+
+// The tagged union or sum type for the algebraic type `ShipType`.
+export const ShipType = __t.enum("ShipType", {
+  Raven: __t.unit(),
+  Gat: __t.unit(),
+});
+export type ShipType = __Infer<typeof ShipType>;
 
 export const SimulationTimer = __t.object("SimulationTimer", {
   scheduledId: __t.u64(),

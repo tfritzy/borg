@@ -1,8 +1,7 @@
 import type { DbConnection } from "../../module_bindings";
-import { Player as PlayerEntity } from "../state/Player";
 import type { World } from "../state/world";
 import type { Ship } from "../types";
-import { Vector2 } from "../util/Vector2";
+import { syncShipMetadata } from "./syncShipMetadata";
 
 // Server positions arrive at 10 Hz; hold a little over one update for interpolation.
 const INTERPOLATION_DELAY_MS = 150;
@@ -64,13 +63,7 @@ export class RemotePlayerController {
       return;
     }
 
-    let entity = this.world.entities.get(id);
-    if (!(entity instanceof PlayerEntity)) {
-      entity = new PlayerEntity(new Vector2(player.x, player.y));
-      entity.id = id;
-      this.world.entities.set(id, entity);
-    }
-
+    syncShipMetadata(this.world, player);
     this.recordSnapshot(id, player, performance.now());
   }
 
@@ -78,7 +71,7 @@ export class RemotePlayerController {
     for (const id of this.snapshots.keys()) {
       const entity = this.world.entities.get(id);
       const position = this.sampleSnapshot(id, time);
-      if (entity instanceof PlayerEntity && position) {
+      if (entity && position) {
         entity.position.x = position.x;
         entity.position.y = position.y;
         entity.faceVelocity(position.vx, position.vy);

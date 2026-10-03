@@ -1,9 +1,9 @@
 import type { DbConnection } from "../../module_bindings";
-import { Player as PlayerEntity } from "../state/Player";
+import type { ShipEntity } from "../state/Ship";
 import type { World } from "../state/world";
 import type { Ship } from "../types";
-import { Vector2 } from "../util/Vector2";
 import { advance, STEP_MS, type MovementState } from "./movement";
+import { syncShipMetadata } from "./syncShipMetadata";
 
 const MAX_FRAME_MS = 250;
 const MAX_PENDING_INPUTS = 120;
@@ -25,7 +25,7 @@ export class PlayerController {
   private readonly identity: string;
   private readonly keys = new Set<string>();
   private readonly pendingInputs: InputFrame[] = [];
-  private player: PlayerEntity | undefined;
+  private player: ShipEntity | undefined;
   private state: MovementState | undefined;
   private previousState: MovementState | undefined;
   private nextInputTick = 0n;
@@ -85,20 +85,14 @@ export class PlayerController {
       if (this.player?.id === id) this.resetPrediction();
       return;
     }
-    const existing = this.world.entities.get(id);
-    const entity = existing instanceof PlayerEntity ? existing : new PlayerEntity(new Vector2());
-    if (entity !== existing) {
-      entity.id = id;
-      this.world.entities.set(id, entity);
-    }
-
-    this.player = entity;
-    this.nextInputTick = this.nextInputTick > player.lastProcessedInputTick
+    this.player = syncShipMetadata(this.world, player);
+    const lastProcessedInputTick = player.lastProcessedInputTick ?? 0n;
+    this.nextInputTick = this.nextInputTick > lastProcessedInputTick
       ? this.nextInputTick
-      : player.lastProcessedInputTick;
+      : lastProcessedInputTick;
     while (
       this.pendingInputs.length > 0 &&
-      this.pendingInputs[0].tick <= player.lastProcessedInputTick
+      this.pendingInputs[0].tick <= lastProcessedInputTick
     ) {
       this.pendingInputs.shift();
     }

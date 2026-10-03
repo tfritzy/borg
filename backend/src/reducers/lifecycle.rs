@@ -26,13 +26,14 @@ pub fn identity_connected(ctx: &ReducerContext) {
     let ship = Ship {
         id: existing.as_ref().map_or(0, |ship| ship.id),
         owner: Some(identity),
+        ship_type: crate::tables::ship::ship_type::ShipType::Raven,
         x: 0.0,
         y: 0.0,
         vx: 0.0,
         vy: 0.0,
-        buttons: 0,
+        buttons: Some(0),
         server_tick: 0,
-        last_processed_input_tick: 0,
+        last_processed_input_tick: Some(0),
     };
     if existing.is_some() {
         ctx.db.ship().id().update(ship);

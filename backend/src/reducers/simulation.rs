@@ -63,8 +63,8 @@ fn process_inputs(player: &mut Ship, inputs: &mut Vec<InputFrame>) {
     let count = inputs.len().min(PHYSICS_STEPS_PER_SERVER_UPDATE as usize);
     for input in inputs.drain(..count) {
         update_movement(player, input.move_x, input.move_y);
-        player.buttons = input.buttons;
-        player.last_processed_input_tick = input.input_tick;
+        player.buttons = Some(input.buttons);
+        player.last_processed_input_tick = Some(input.input_tick);
     }
 }
 

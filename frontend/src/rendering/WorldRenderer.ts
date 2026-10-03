@@ -1,5 +1,6 @@
 import type { World } from "../state/world";
 import { Background } from "./Background";
+import { ShipRenderer } from "./ShipRenderer";
 
 export class WorldRenderer {
   world: World;
@@ -8,6 +9,7 @@ export class WorldRenderer {
   private resizeObserver: ResizeObserver | null = null;
   private offset = { x: 0, y: 0 };
   private background: Background;
+  private readonly ships = new ShipRenderer();
 
   constructor(canvas: HTMLCanvasElement, world: World) {
     this.canvas = canvas;
@@ -57,17 +59,7 @@ export class WorldRenderer {
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(Math.PI / 2 - entity.rotation);
-      ctx.lineJoin = "round";
-      ctx.lineWidth = 1.25;
-
-      ctx.beginPath();
-      ctx.moveTo(0, -10);
-      ctx.lineTo(7, 7);
-      ctx.lineTo(0, 4);
-      ctx.lineTo(-7, 7);
-      ctx.closePath();
-      ctx.strokeStyle = "#1f2937";
-      ctx.stroke();
+      this.ships.draw(ctx, entity.shipType);
       ctx.restore();
     }
   }

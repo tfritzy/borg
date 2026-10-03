@@ -1,7 +1,7 @@
 import { generateId } from "../util/generateId";
 import type { Vector2 } from "../util/Vector2";
 
-export type EntityType = "player";
+export type EntityType = "ship";
 
 export class Entity {
   id: string;

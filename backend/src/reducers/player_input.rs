@@ -43,7 +43,8 @@ pub fn submit_player_input(
         .iter()
         .find(|ship| ship.owner == Some(identity))
         .ok_or_else(|| "Player is not connected".to_string())?
-        .last_processed_input_tick;
+        .last_processed_input_tick
+        .unwrap_or(0);
     let last_received = buffer
         .inputs
         .last()
