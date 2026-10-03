@@ -40,21 +40,31 @@ pub fn update_players(ctx: &ReducerContext, timer: SimulationTimer) -> Result<()
             ..timer
         });
 
-    let players: Vec<_> = ctx.db.ship().iter().collect();
-    for mut player in players {
-        player.server_tick = server_tick;
-
-        if let Some(mut input_buffer) = player
+    let ships: Vec<_> = ctx.db.ship().iter().collect();
+    for mut ship in ships {
+        ship.server_tick = server_tick;
+        if ship.behavior.is_some() {
+            super::ship_behavior::update(
+                &mut ship,
+                SERVER_UPDATE_INTERVAL_MICROS as f32 / 1_000_000.0,
+            );
+        } else if let Some(mut input_buffer) = ship
             .owner
             .and_then(|owner| ctx.db.player_input_buffer().identity().find(owner))
         {
-            process_inputs(&mut player, &mut input_buffer.inputs);
+            process_inputs(&mut ship, &mut input_buffer.inputs);
 
             ctx.db.player_input_buffer().identity().update(input_buffer);
         }
 
-        ctx.db.ship().id().update(player);
+        ctx.db.ship().id().update(ship);
     }
+
+    super::ship_spawner::update(
+        ctx,
+        server_tick,
+        SERVER_UPDATE_INTERVAL_MICROS as f32 / 1_000_000.0,
+    );
 
     Ok(())
 }

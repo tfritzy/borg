@@ -11,6 +11,7 @@ import {
 } from "spacetimedb";
 import {
   ShipType,
+  ShipBehavior,
 } from "./types";
 
 
@@ -27,4 +28,7 @@ export default __t.row({
   buttons: __t.option(__t.u32()),
   serverTick: __t.u64().name("server_tick"),
   lastProcessedInputTick: __t.option(__t.u64()).name("last_processed_input_tick"),
+  get behavior() {
+    return __t.option(ShipBehavior);
+  },
 });

@@ -34,6 +34,7 @@ pub fn identity_connected(ctx: &ReducerContext) {
         buttons: Some(0),
         server_tick: 0,
         last_processed_input_tick: Some(0),
+        behavior: None,
     };
     if existing.is_some() {
         ctx.db.ship().id().update(ship);

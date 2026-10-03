@@ -40,8 +40,17 @@ export const Ship = __t.object("Ship", {
   buttons: __t.option(__t.u32()),
   serverTick: __t.u64(),
   lastProcessedInputTick: __t.option(__t.u64()),
+  get behavior() {
+    return __t.option(ShipBehavior);
+  },
 });
 export type Ship = __Infer<typeof Ship>;
+
+// The tagged union or sum type for the algebraic type `ShipBehavior`.
+export const ShipBehavior = __t.enum("ShipBehavior", {
+  Traffic: __t.unit(),
+});
+export type ShipBehavior = __Infer<typeof ShipBehavior>;
 
 // The tagged union or sum type for the algebraic type `ShipType`.
 export const ShipType = __t.enum("ShipType", {
