@@ -1,4 +1,7 @@
-use crate::tables::{player, player_input_buffer, Player, PlayerInputBuffer};
+use crate::tables::{
+    player_input_buffer::{player_input_buffer, PlayerInputBuffer},
+    ship::{ship, Ship},
+};
 use spacetimedb::{ReducerContext, Table};
 
 #[spacetimedb::reducer(init)]
@@ -15,8 +18,14 @@ pub fn identity_connected(ctx: &ReducerContext) {
         .connection_id()
         .expect("client_connected reducers have a connection ID");
 
-    let player = Player {
-        identity,
+    let existing = ctx
+        .db
+        .ship()
+        .iter()
+        .find(|ship| ship.owner == Some(identity));
+    let ship = Ship {
+        id: existing.as_ref().map_or(0, |ship| ship.id),
+        owner: Some(identity),
         x: 0.0,
         y: 0.0,
         vx: 0.0,
@@ -25,10 +34,10 @@ pub fn identity_connected(ctx: &ReducerContext) {
         server_tick: 0,
         last_processed_input_tick: 0,
     };
-    if ctx.db.player().identity().find(identity).is_some() {
-        ctx.db.player().identity().update(player);
+    if existing.is_some() {
+        ctx.db.ship().id().update(ship);
     } else {
-        ctx.db.player().insert(player);
+        ctx.db.ship().insert(ship);
     }
 
     let input_buffer = PlayerInputBuffer {
@@ -66,6 +75,14 @@ pub fn identity_disconnected(ctx: &ReducerContext) {
         return;
     }
 
-    ctx.db.player().identity().delete(identity);
+    let ships: Vec<_> = ctx
+        .db
+        .ship()
+        .iter()
+        .filter(|ship| ship.owner == Some(identity))
+        .collect();
+    for ship in ships {
+        ctx.db.ship().id().delete(ship.id);
+    }
     ctx.db.player_input_buffer().identity().delete(identity);
 }

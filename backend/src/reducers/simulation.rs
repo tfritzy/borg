@@ -1,5 +1,7 @@
 use crate::tables::{
-    player, player_input_buffer, simulation_timer, InputFrame, Player, SimulationTimer,
+    player_input_buffer::{player_input_buffer, InputFrame},
+    ship::{ship, Ship},
+    simulation_timer::{simulation_timer, SimulationTimer},
 };
 use spacetimedb::{ReducerContext, Table, TimeDuration};
 
@@ -38,28 +40,26 @@ pub fn update_players(ctx: &ReducerContext, timer: SimulationTimer) -> Result<()
             ..timer
         });
 
-    let players: Vec<_> = ctx.db.player().iter().collect();
+    let players: Vec<_> = ctx.db.ship().iter().collect();
     for mut player in players {
         player.server_tick = server_tick;
 
-        if let Some(mut input_buffer) = ctx
-            .db
-            .player_input_buffer()
-            .identity()
-            .find(player.identity)
+        if let Some(mut input_buffer) = player
+            .owner
+            .and_then(|owner| ctx.db.player_input_buffer().identity().find(owner))
         {
             process_inputs(&mut player, &mut input_buffer.inputs);
 
             ctx.db.player_input_buffer().identity().update(input_buffer);
         }
 
-        ctx.db.player().identity().update(player);
+        ctx.db.ship().id().update(player);
     }
 
     Ok(())
 }
 
-fn process_inputs(player: &mut Player, inputs: &mut Vec<InputFrame>) {
+fn process_inputs(player: &mut Ship, inputs: &mut Vec<InputFrame>) {
     let count = inputs.len().min(PHYSICS_STEPS_PER_SERVER_UPDATE as usize);
     for input in inputs.drain(..count) {
         update_movement(player, input.move_x, input.move_y);
@@ -68,7 +68,7 @@ fn process_inputs(player: &mut Player, inputs: &mut Vec<InputFrame>) {
     }
 }
 
-fn update_movement(player: &mut Player, move_x: f32, move_y: f32) {
+fn update_movement(player: &mut Ship, move_x: f32, move_y: f32) {
     let damping = (-PLAYER_LINEAR_DAMPING * PHYSICS_DELTA_SECONDS).exp();
     player.vx = (player.vx + move_x * PLAYER_THRUST * PHYSICS_DELTA_SECONDS) * damping;
     player.vy = (player.vy + move_y * PLAYER_THRUST * PHYSICS_DELTA_SECONDS) * damping;

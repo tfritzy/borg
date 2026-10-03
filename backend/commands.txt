@@ -1,6 +1,6 @@
 spacetime generate --lang typescript --out-dir frontend/module_bindings --module-path backend
 
-spacetime sql typar "SELECT * from player" -s maincloud typar
+spacetime sql typar "SELECT * from ship" -s maincloud typar
 
 spacetime publish typar -s local --module-path backend
 

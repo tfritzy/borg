@@ -39,23 +39,23 @@ import SubmitPlayerInputReducer from "./submit_player_input_reducer";
 // Import all procedure arg schemas
 
 // Import all table schema definitions
-import PlayerRow from "./player_table";
+import ShipRow from "./ship_table";
 
 /** Type-only namespace exports for generated type groups. */
 
 /** The schema information for all tables in this module. This is defined the same was as the tables would have been defined in the server. */
 const tablesSchema = __schema({
-  player: __table({
-    name: 'player',
+  ship: __table({
+    name: 'ship',
     indexes: [
-      { accessor: 'identity', name: 'player_identity_idx_btree', algorithm: 'btree', columns: [
-        'identity',
+      { accessor: 'id', name: 'ship_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
       ] },
     ],
     constraints: [
-      { name: 'player_identity_key', constraint: 'unique', columns: ['identity'] },
+      { name: 'ship_id_key', constraint: 'unique', columns: ['id'] },
     ],
-  }, PlayerRow),
+  }, ShipRow),
 });
 
 /** The schema information for all reducers in this module. This is defined the same way as the reducers would have been defined in the server, except the body of the reducer is omitted in code generation. */

@@ -1,5 +1,8 @@
-use crate::tables::{player, player_input_buffer, InputFrame};
-use spacetimedb::ReducerContext;
+use crate::tables::{
+    player_input_buffer::{player_input_buffer, InputFrame},
+    ship::ship,
+};
+use spacetimedb::{ReducerContext, Table};
 
 const MAX_BUFFERED_INPUTS: usize = 120;
 
@@ -36,9 +39,9 @@ pub fn submit_player_input(
 
     let last_processed = ctx
         .db
-        .player()
-        .identity()
-        .find(identity)
+        .ship()
+        .iter()
+        .find(|ship| ship.owner == Some(identity))
         .ok_or_else(|| "Player is not connected".to_string())?
         .last_processed_input_tick;
     let last_received = buffer

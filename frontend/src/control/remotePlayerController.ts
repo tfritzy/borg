@@ -1,7 +1,7 @@
 import type { DbConnection } from "../../module_bindings";
 import { Player as PlayerEntity } from "../state/Player";
 import type { World } from "../state/world";
-import type { Player } from "../types";
+import type { Ship } from "../types";
 import { Vector2 } from "../util/Vector2";
 
 // Server positions arrive at 10 Hz; hold a little over one update for interpolation.
@@ -29,50 +29,55 @@ export class RemotePlayerController {
     this.world = world;
     this.identity = connection.identity!.toHexString();
 
-    connection.db.player.onInsert(this.onPlayerInsert);
-    connection.db.player.onUpdate(this.onPlayerUpdate);
-    connection.db.player.onDelete(this.onPlayerDelete);
+    connection.db.ship.onInsert(this.onPlayerInsert);
+    connection.db.ship.onUpdate(this.onPlayerUpdate);
+    connection.db.ship.onDelete(this.onPlayerDelete);
   }
 
-  private readonly onPlayerInsert = (_ctx: unknown, player: Player) => {
+  private readonly onPlayerInsert = (_ctx: unknown, player: Ship) => {
     this.syncPlayer(player);
   };
 
   private readonly onPlayerUpdate = (
     _ctx: unknown,
-    _oldPlayer: Player,
-    player: Player,
+    _oldPlayer: Ship,
+    player: Ship,
   ) => {
     this.syncPlayer(player);
   };
 
-  private readonly onPlayerDelete = (_ctx: unknown, player: Player) => {
+  private readonly onPlayerDelete = (_ctx: unknown, player: Ship) => {
     if (this.disposed) return;
-    const identity = player.identity.toHexString();
-    if (identity === this.identity) return;
-    this.world.entities.delete(identity);
-    this.snapshots.delete(identity);
+    const owner = player.owner?.toHexString();
+    const id = player.id.toString();
+    if (owner === this.identity) return;
+    this.world.entities.delete(id);
+    this.snapshots.delete(id);
   };
 
-  private syncPlayer(player: Player): void {
+  private syncPlayer(player: Ship): void {
     if (this.disposed) return;
-    const identity = player.identity.toHexString();
-    if (identity === this.identity) return;
-
-    let entity = this.world.entities.get(identity);
-    if (!(entity instanceof PlayerEntity)) {
-      entity = new PlayerEntity(new Vector2(player.x, player.y));
-      entity.id = identity;
-      this.world.entities.set(identity, entity);
+    const owner = player.owner?.toHexString();
+    const id = player.id.toString();
+    if (owner === this.identity) {
+      this.snapshots.delete(id);
+      return;
     }
 
-    this.recordSnapshot(identity, player, performance.now());
+    let entity = this.world.entities.get(id);
+    if (!(entity instanceof PlayerEntity)) {
+      entity = new PlayerEntity(new Vector2(player.x, player.y));
+      entity.id = id;
+      this.world.entities.set(id, entity);
+    }
+
+    this.recordSnapshot(id, player, performance.now());
   }
 
   update(time: number): void {
-    for (const identity of this.snapshots.keys()) {
-      const entity = this.world.entities.get(identity);
-      const position = this.sampleSnapshot(identity, time);
+    for (const id of this.snapshots.keys()) {
+      const entity = this.world.entities.get(id);
+      const position = this.sampleSnapshot(id, time);
       if (entity instanceof PlayerEntity && position) {
         entity.position.x = position.x;
         entity.position.y = position.y;
@@ -83,7 +88,7 @@ export class RemotePlayerController {
 
   private recordSnapshot(
     identity: string,
-    position: Pick<Player, "x" | "y" | "vx" | "vy" | "serverTick">,
+    position: Pick<Ship, "x" | "y" | "vx" | "vy" | "serverTick">,
     receivedAt: number,
   ): void {
     let history = this.snapshots.get(identity);
@@ -154,9 +159,9 @@ export class RemotePlayerController {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
-    this.connection.db.player.removeOnInsert(this.onPlayerInsert);
-    this.connection.db.player.removeOnUpdate(this.onPlayerUpdate);
-    this.connection.db.player.removeOnDelete(this.onPlayerDelete);
+    this.connection.db.ship.removeOnInsert(this.onPlayerInsert);
+    this.connection.db.ship.removeOnUpdate(this.onPlayerUpdate);
+    this.connection.db.ship.removeOnDelete(this.onPlayerDelete);
     this.snapshots.clear();
   }
 }

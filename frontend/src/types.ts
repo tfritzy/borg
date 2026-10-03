@@ -1,4 +1,4 @@
 import type { Infer } from "spacetimedb";
-import PlayerRow from "../module_bindings/player_table";
+import ShipRow from "../module_bindings/ship_table";
 
-export type Player = Infer<typeof PlayerRow>;
+export type Ship = Infer<typeof ShipRow>;

@@ -18,18 +18,6 @@ export const InputFrame = __t.object("InputFrame", {
 });
 export type InputFrame = __Infer<typeof InputFrame>;
 
-export const Player = __t.object("Player", {
-  identity: __t.identity(),
-  x: __t.f32(),
-  y: __t.f32(),
-  vx: __t.f32(),
-  vy: __t.f32(),
-  buttons: __t.u32(),
-  serverTick: __t.u64(),
-  lastProcessedInputTick: __t.u64(),
-});
-export type Player = __Infer<typeof Player>;
-
 export const PlayerInputBuffer = __t.object("PlayerInputBuffer", {
   identity: __t.identity(),
   connectionId: __t.connectionId(),
@@ -38,6 +26,19 @@ export const PlayerInputBuffer = __t.object("PlayerInputBuffer", {
   },
 });
 export type PlayerInputBuffer = __Infer<typeof PlayerInputBuffer>;
+
+export const Ship = __t.object("Ship", {
+  id: __t.u64(),
+  owner: __t.option(__t.identity()),
+  x: __t.f32(),
+  y: __t.f32(),
+  vx: __t.f32(),
+  vy: __t.f32(),
+  buttons: __t.u32(),
+  serverTick: __t.u64(),
+  lastProcessedInputTick: __t.u64(),
+});
+export type Ship = __Infer<typeof Ship>;
 
 export const SimulationTimer = __t.object("SimulationTimer", {
   scheduledId: __t.u64(),

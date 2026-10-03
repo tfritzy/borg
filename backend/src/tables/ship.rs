@@ -1,9 +1,11 @@
 use spacetimedb::Identity;
 
-#[spacetimedb::table(accessor = player, public)]
-pub struct Player {
+#[spacetimedb::table(accessor = ship, public)]
+pub struct Ship {
     #[primary_key]
-    pub(crate) identity: Identity,
+    #[auto_inc]
+    pub(crate) id: u64,
+    pub(crate) owner: Option<Identity>,
     pub(crate) x: f32,
     pub(crate) y: f32,
     #[default(0.0)]
