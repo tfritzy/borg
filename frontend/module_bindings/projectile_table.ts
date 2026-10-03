@@ -9,11 +9,17 @@ import {
   type AlgebraicTypeType as __AlgebraicTypeType,
   type Infer as __Infer,
 } from "spacetimedb";
+import {
+  ProjectileType,
+} from "./types";
+
 
 export default __t.row({
   id: __t.u64().primaryKey(),
   worldId: __t.u64().name("world_id"),
-  projectileType: __t.string().name("projectile_type"),
+  get projectileType() {
+    return ProjectileType.name("projectile_type");
+  },
   x: __t.f32(),
   y: __t.f32(),
   vx: __t.f32(),

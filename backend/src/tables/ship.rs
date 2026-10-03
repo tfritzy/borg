@@ -6,6 +6,9 @@ pub(crate) mod ship_type;
 #[path = "../types/ship_behavior.rs"]
 pub(crate) mod ship_behavior;
 
+#[path = "../consts/ship_properties.rs"]
+pub(crate) mod ship_properties;
+
 #[spacetimedb::table(accessor = ship, public)]
 pub struct Ship {
     #[primary_key]
@@ -15,6 +18,7 @@ pub struct Ship {
     pub(crate) world_id: u64,
     pub(crate) owner: Option<Identity>,
     pub(crate) ship_type: ship_type::ShipType,
+    pub(crate) properties: ship_properties::ShipProperties,
     pub(crate) x: f32,
     pub(crate) y: f32,
     #[default(0.0)]

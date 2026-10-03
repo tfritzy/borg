@@ -1,6 +1,6 @@
 use crate::tables::{
     player_input_buffer::{player_input_buffer, PlayerInputBuffer},
-    ship::{ship, Ship},
+    ship::{ship, ship_properties::get_ship_properties, ship_type::ShipType, Ship},
     world::{world, World, DEFAULT_WORLD_ID},
 };
 use spacetimedb::{ReducerContext, Table};
@@ -38,7 +38,8 @@ pub fn identity_connected(ctx: &ReducerContext) {
         id: existing.as_ref().map_or(0, |ship| ship.id),
         world_id: DEFAULT_WORLD_ID,
         owner: Some(identity),
-        ship_type: crate::tables::ship::ship_type::ShipType::Raven,
+        ship_type: ShipType::Raven,
+        properties: *get_ship_properties(&ShipType::Raven),
         x: 0.0,
         y: 0.0,
         vx: 0.0,

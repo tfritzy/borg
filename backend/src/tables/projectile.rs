@@ -1,5 +1,8 @@
 use spacetimedb::{Identity, Timestamp};
 
+#[path = "../types/projectile_type.rs"]
+pub(crate) mod projectile_type;
+
 #[spacetimedb::table(accessor = projectile, public)]
 pub struct Projectile {
     #[primary_key]
@@ -7,7 +10,7 @@ pub struct Projectile {
     pub(crate) id: u64,
     #[default(1)]
     pub(crate) world_id: u64,
-    pub(crate) projectile_type: String,
+    pub(crate) projectile_type: projectile_type::ProjectileType,
     pub(crate) x: f32,
     pub(crate) y: f32,
     pub(crate) vx: f32,

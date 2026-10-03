@@ -31,7 +31,9 @@ export type PlayerInputBuffer = __Infer<typeof PlayerInputBuffer>;
 export const Projectile = __t.object("Projectile", {
   id: __t.u64(),
   worldId: __t.u64(),
-  projectileType: __t.string(),
+  get projectileType() {
+    return ProjectileType;
+  },
   x: __t.f32(),
   y: __t.f32(),
   vx: __t.f32(),
@@ -43,12 +45,21 @@ export const Projectile = __t.object("Projectile", {
 });
 export type Projectile = __Infer<typeof Projectile>;
 
+// The tagged union or sum type for the algebraic type `ProjectileType`.
+export const ProjectileType = __t.enum("ProjectileType", {
+  Bullet: __t.unit(),
+});
+export type ProjectileType = __Infer<typeof ProjectileType>;
+
 export const Ship = __t.object("Ship", {
   id: __t.u64(),
   worldId: __t.u64(),
   owner: __t.option(__t.identity()),
   get shipType() {
     return ShipType;
+  },
+  get properties() {
+    return ShipProperties;
   },
   x: __t.f32(),
   y: __t.f32(),
@@ -68,6 +79,16 @@ export const ShipBehavior = __t.enum("ShipBehavior", {
   Traffic: __t.unit(),
 });
 export type ShipBehavior = __Infer<typeof ShipBehavior>;
+
+export const ShipProperties = __t.object("ShipProperties", {
+  projectileSpeed: __t.f32(),
+  damage: __t.u32(),
+  thrust: __t.f32(),
+  maxSpeed: __t.f32(),
+  linearDamping: __t.f32(),
+  accuracy: __t.f32(),
+});
+export type ShipProperties = __Infer<typeof ShipProperties>;
 
 // The tagged union or sum type for the algebraic type `ShipType`.
 export const ShipType = __t.enum("ShipType", {

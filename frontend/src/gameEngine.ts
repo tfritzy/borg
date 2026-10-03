@@ -3,7 +3,8 @@ import { PlayerController } from "./control/playerController";
 import { RemotePlayerController } from "./control/remotePlayerController";
 import { World } from "./state/world";
 import { Database } from "./util/db";
-import { subscribeToPlayers } from "./util/subscriptions";
+import { subscribeToWorld } from "./util/subscriptions";
+import { watchProjectiles } from "./util/watchProjectiles";
 
 export class GameEngine {
   readonly world: World;
@@ -12,7 +13,8 @@ export class GameEngine {
   private frameId: number | null = null;
   private playerController: PlayerController | undefined;
   private remotePlayerController: RemotePlayerController | undefined;
-  private playerSubscription: SubscriptionHandle | undefined;
+  private unwatchProjectiles: (() => void) | undefined;
+  private worldSubscription: SubscriptionHandle | undefined;
 
   constructor(world: World = new World(), database: Database = new Database()) {
     this.world = world;
@@ -29,7 +31,8 @@ export class GameEngine {
         if (!this.active) return;
         this.playerController = new PlayerController(connection, this.world);
         this.remotePlayerController = new RemotePlayerController(connection, this.world);
-        this.playerSubscription = subscribeToPlayers(connection, this.world.id);
+        this.unwatchProjectiles = watchProjectiles(connection, this.world);
+        this.worldSubscription = subscribeToWorld(connection, this.world.id);
       })
       .catch((error: unknown) => {
         if (this.active) {
@@ -55,8 +58,10 @@ export class GameEngine {
     this.playerController = undefined;
     this.remotePlayerController?.dispose();
     this.remotePlayerController = undefined;
-    this.playerSubscription?.unsubscribe();
-    this.playerSubscription = undefined;
+    this.unwatchProjectiles?.();
+    this.unwatchProjectiles = undefined;
+    this.worldSubscription?.unsubscribe();
+    this.worldSubscription = undefined;
 
     if (this.frameId !== null) {
       cancelAnimationFrame(this.frameId);

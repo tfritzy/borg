@@ -1,8 +1,8 @@
 export const STEP_SECONDS = 1 / 60;
 export const STEP_MS = 1000 / 60;
-const MAX_SPEED = 60;
-const THRUST = 120;
-const LINEAR_DAMPING = 1.5;
+import type { Ship } from "../types";
+
+type MovementProperties = Pick<Ship["properties"], "thrust" | "maxSpeed" | "linearDamping">;
 
 export type MovementState = {
   x: number;
@@ -15,15 +15,16 @@ export function advance(
   state: MovementState,
   moveX: number,
   moveY: number,
+  properties: MovementProperties,
 ): void {
-  const damping = Math.exp(-LINEAR_DAMPING * STEP_SECONDS);
-  state.vx = (state.vx + moveX * THRUST * STEP_SECONDS) * damping;
-  state.vy = (state.vy + moveY * THRUST * STEP_SECONDS) * damping;
+  const damping = Math.exp(-properties.linearDamping * STEP_SECONDS);
+  state.vx = (state.vx + moveX * properties.thrust * STEP_SECONDS) * damping;
+  state.vy = (state.vy + moveY * properties.thrust * STEP_SECONDS) * damping;
 
   const speed = Math.hypot(state.vx, state.vy);
-  if (speed > MAX_SPEED) {
-    state.vx *= MAX_SPEED / speed;
-    state.vy *= MAX_SPEED / speed;
+  if (speed > properties.maxSpeed) {
+    state.vx *= properties.maxSpeed / speed;
+    state.vy *= properties.maxSpeed / speed;
   }
 
   state.x += state.vx * STEP_SECONDS;

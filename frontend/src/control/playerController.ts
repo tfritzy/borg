@@ -9,8 +9,14 @@ const MAX_FRAME_MS = 250;
 const MAX_PENDING_INPUTS = 120;
 
 const MOVEMENT_KEYS = new Set([
-  "w", "a", "s", "d",
-  "arrowup", "arrowleft", "arrowdown", "arrowright",
+  "w",
+  "a",
+  "s",
+  "d",
+  "arrowup",
+  "arrowleft",
+  "arrowdown",
+  "arrowright",
 ]);
 
 type InputFrame = {
@@ -25,7 +31,8 @@ export class PlayerController {
   private readonly identity: string;
   private readonly keys = new Set<string>();
   private readonly pendingInputs: InputFrame[] = [];
-  private player: ShipEntity | undefined;
+  private ship: ShipEntity | undefined;
+  private properties: Ship["properties"] | undefined;
   private state: MovementState | undefined;
   private previousState: MovementState | undefined;
   private nextInputTick = 0n;
@@ -38,38 +45,39 @@ export class PlayerController {
     this.world = world;
     this.identity = connection.identity!.toHexString();
 
-    connection.db.ship.onInsert(this.onPlayerInsert);
-    connection.db.ship.onUpdate(this.onPlayerUpdate);
-    connection.db.ship.onDelete(this.onPlayerDelete);
+    connection.db.ship.onInsert(this.onShipInsert);
+    connection.db.ship.onUpdate(this.onShipUpdate);
+    connection.db.ship.onDelete(this.onShipDelete);
     document.addEventListener("keydown", this.onKeyDown);
     document.addEventListener("keyup", this.onKeyUp);
     window.addEventListener("blur", this.releaseKeys);
     document.addEventListener("visibilitychange", this.onVisibilityChange);
   }
 
-  private readonly onPlayerInsert = (_ctx: unknown, player: Ship) => {
-    if (!this.disposed) this.syncPlayer(player);
+  private readonly onShipInsert = (_ctx: unknown, ship: Ship) => {
+    if (!this.disposed) this.syncShip(ship);
   };
 
-  private readonly onPlayerUpdate = (
+  private readonly onShipUpdate = (
     _ctx: unknown,
-    _oldPlayer: Ship,
-    player: Ship,
+    _oldShip: Ship,
+    ship: Ship,
   ) => {
-    if (!this.disposed) this.syncPlayer(player);
+    if (!this.disposed) this.syncShip(ship);
   };
 
-  private readonly onPlayerDelete = (_ctx: unknown, player: Ship) => {
+  private readonly onShipDelete = (_ctx: unknown, ship: Ship) => {
     if (this.disposed) return;
-    const owner = player.owner?.toHexString();
-    const id = player.id.toString();
+    const owner = ship.owner?.toHexString();
+    const id = ship.id.toString();
     if (owner !== this.identity) return;
     this.world.entities.delete(id);
     this.resetPrediction();
   };
 
   private resetPrediction(): void {
-    this.player = undefined;
+    this.ship = undefined;
+    this.properties = undefined;
     this.state = undefined;
     this.previousState = undefined;
     this.pendingInputs.length = 0;
@@ -77,19 +85,21 @@ export class PlayerController {
     this.accumulatedMs = 0;
   }
 
-  private syncPlayer(player: Ship): void {
+  private syncShip(ship: Ship): void {
     if (this.disposed) return;
-    const owner = player.owner?.toHexString();
-    const id = player.id.toString();
+    const owner = ship.owner?.toHexString();
+    const id = ship.id.toString();
     if (owner !== this.identity) {
-      if (this.player?.id === id) this.resetPrediction();
+      if (this.ship?.id === id) this.resetPrediction();
       return;
     }
-    this.player = syncShipMetadata(this.world, player);
-    const lastProcessedInputTick = player.lastProcessedInputTick ?? 0n;
-    this.nextInputTick = this.nextInputTick > lastProcessedInputTick
-      ? this.nextInputTick
-      : lastProcessedInputTick;
+    this.ship = syncShipMetadata(this.world, ship);
+    this.properties = ship.properties;
+    const lastProcessedInputTick = ship.lastProcessedInputTick ?? 0n;
+    this.nextInputTick =
+      this.nextInputTick > lastProcessedInputTick
+        ? this.nextInputTick
+        : lastProcessedInputTick;
     while (
       this.pendingInputs.length > 0 &&
       this.pendingInputs[0].tick <= lastProcessedInputTick
@@ -98,17 +108,17 @@ export class PlayerController {
     }
 
     const state = {
-      x: player.x,
-      y: player.y,
-      vx: player.vx,
-      vy: player.vy,
+      x: ship.x,
+      y: ship.y,
+      vx: ship.vx,
+      vy: ship.vy,
     };
     for (const input of this.pendingInputs) {
-      advance(state, input.moveX, input.moveY);
+      advance(state, input.moveX, input.moveY, this.properties);
     }
     if (this.previousState && this.state) {
       // Correct both interpolation endpoints so an acknowledgement does not
-      // collapse the render interval or move the player ahead by one tick.
+      // collapse the render interval or move the ship ahead by one tick.
       this.previousState.x += state.x - this.state.x;
       this.previousState.y += state.y - this.state.y;
       this.previousState.vx += state.vx - this.state.vx;
@@ -123,15 +133,17 @@ export class PlayerController {
   }
 
   private writePosition(): void {
-    if (!this.player || !this.state || !this.previousState) return;
+    if (!this.ship || !this.state || !this.previousState) return;
     const alpha = this.accumulatedMs / STEP_MS;
-    this.player.position.x = this.previousState.x
-      + (this.state.x - this.previousState.x) * alpha;
-    this.player.position.y = this.previousState.y
-      + (this.state.y - this.previousState.y) * alpha;
-    const vx = this.previousState.vx + (this.state.vx - this.previousState.vx) * alpha;
-    const vy = this.previousState.vy + (this.state.vy - this.previousState.vy) * alpha;
-    this.player.faceVelocity(vx, vy);
+    this.ship.position.x =
+      this.previousState.x + (this.state.x - this.previousState.x) * alpha;
+    this.ship.position.y =
+      this.previousState.y + (this.state.y - this.previousState.y) * alpha;
+    const vx =
+      this.previousState.vx + (this.state.vx - this.previousState.vx) * alpha;
+    const vy =
+      this.previousState.vy + (this.state.vy - this.previousState.vy) * alpha;
+    this.ship.faceVelocity(vx, vy);
   }
 
   private readonly onKeyDown = (event: KeyboardEvent) => {
@@ -161,7 +173,12 @@ export class PlayerController {
   update(time: number): void {
     const elapsed = Math.min(Math.max(time - this.lastTime, 0), MAX_FRAME_MS);
     this.lastTime = time;
-    if (!this.state || !this.connection.isActive || document.hidden) {
+    if (
+      !this.state ||
+      !this.properties ||
+      !this.connection.isActive ||
+      document.hidden
+    ) {
       this.accumulatedMs = 0;
       return;
     }
@@ -169,10 +186,12 @@ export class PlayerController {
     this.accumulatedMs += elapsed;
     while (this.accumulatedMs >= STEP_MS) {
       this.accumulatedMs -= STEP_MS;
-      const moveX = Number(this.keys.has("d") || this.keys.has("arrowright"))
-        - Number(this.keys.has("a") || this.keys.has("arrowleft"));
-      const moveY = Number(this.keys.has("w") || this.keys.has("arrowup"))
-        - Number(this.keys.has("s") || this.keys.has("arrowdown"));
+      const moveX =
+        Number(this.keys.has("d") || this.keys.has("arrowright")) -
+        Number(this.keys.has("a") || this.keys.has("arrowleft"));
+      const moveY =
+        Number(this.keys.has("w") || this.keys.has("arrowup")) -
+        Number(this.keys.has("s") || this.keys.has("arrowdown"));
       const length = Math.hypot(moveX, moveY);
       const x = length > 1 ? moveX / length : moveX;
       const y = length > 1 ? moveY / length : moveY;
@@ -189,22 +208,24 @@ export class PlayerController {
   }
 
   private submitInput(moveX: number, moveY: number): void {
-    if (!this.state || !this.connection.isActive) return;
+    if (!this.state || !this.properties || !this.connection.isActive) return;
     const input = { tick: ++this.nextInputTick, moveX, moveY };
     this.pendingInputs.push(input);
-    advance(this.state, moveX, moveY);
-    void this.connection.reducers.submitPlayerInput({
-      inputTick: input.tick,
-      moveX,
-      moveY,
-      buttons: 0,
-    }).catch((error: unknown) => {
-      const index = this.pendingInputs.indexOf(input);
-      if (index !== -1) this.pendingInputs.splice(index, 1);
-      if (!this.disposed) {
-        console.error("Failed to submit player input", error);
-      }
-    });
+    advance(this.state, moveX, moveY, this.properties);
+    void this.connection.reducers
+      .submitPlayerInput({
+        inputTick: input.tick,
+        moveX,
+        moveY,
+        buttons: 0,
+      })
+      .catch((error: unknown) => {
+        const index = this.pendingInputs.indexOf(input);
+        if (index !== -1) this.pendingInputs.splice(index, 1);
+        if (!this.disposed) {
+          console.error("Failed to submit ship input", error);
+        }
+      });
   }
 
   dispose(): void {
@@ -215,8 +236,8 @@ export class PlayerController {
     document.removeEventListener("keyup", this.onKeyUp);
     window.removeEventListener("blur", this.releaseKeys);
     document.removeEventListener("visibilitychange", this.onVisibilityChange);
-    this.connection.db.ship.removeOnInsert(this.onPlayerInsert);
-    this.connection.db.ship.removeOnUpdate(this.onPlayerUpdate);
-    this.connection.db.ship.removeOnDelete(this.onPlayerDelete);
+    this.connection.db.ship.removeOnInsert(this.onShipInsert);
+    this.connection.db.ship.removeOnUpdate(this.onShipUpdate);
+    this.connection.db.ship.removeOnDelete(this.onShipDelete);
   }
 }

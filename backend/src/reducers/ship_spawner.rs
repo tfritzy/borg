@@ -1,4 +1,7 @@
-use crate::tables::ship::{ship, ship_behavior::ShipBehavior, ship_type::ShipType, Ship};
+use crate::tables::ship::{
+    ship, ship_behavior::ShipBehavior, ship_properties::get_ship_properties, ship_type::ShipType,
+    Ship,
+};
 use crate::tables::world::DEFAULT_WORLD_ID;
 use spacetimedb::{ReducerContext, Table};
 use std::f32::consts::TAU;
@@ -19,6 +22,7 @@ pub(crate) fn update(ctx: &ReducerContext, server_tick: u64, delta_seconds: f32)
         world_id: DEFAULT_WORLD_ID,
         owner: None,
         ship_type: ShipType::Gat,
+        properties: *get_ship_properties(&ShipType::Gat),
         x: radius * cos,
         y: radius * sin,
         vx: 0.0,

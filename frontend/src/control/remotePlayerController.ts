@@ -34,7 +34,12 @@ export class RemotePlayerController {
   }
 
   private readonly onPlayerInsert = (_ctx: unknown, player: Ship) => {
+    if (player.owner?.toHexString() === this.identity) return;
     this.syncPlayer(player);
+    const entity = this.world.entities.get(player.id.toString());
+    if (entity && !entity.label) {
+      entity.rollLabel();
+    }
   };
 
   private readonly onPlayerUpdate = (
@@ -96,13 +101,24 @@ export class RemotePlayerController {
       if (position.serverTick !== 0n) return;
       history.length = 0;
     }
-    if (last && position.serverTick === last.serverTick
-      && position.x === last.x && position.y === last.y) return;
+    if (
+      last &&
+      position.serverTick === last.serverTick &&
+      position.x === last.x &&
+      position.y === last.y
+    )
+      return;
 
-    if (last && history.length > 0
-      && receivedAt - last.receivedAt > INTERPOLATION_DELAY_MS) {
+    if (
+      last &&
+      history.length > 0 &&
+      receivedAt - last.receivedAt > INTERPOLATION_DELAY_MS
+    ) {
       // Resume from the held pose after a stalled stream.
-      history.push({ ...last, receivedAt: receivedAt - INTERPOLATION_DELAY_MS });
+      history.push({
+        ...last,
+        receivedAt: receivedAt - INTERPOLATION_DELAY_MS,
+      });
     }
     history.push({
       x: position.x,
@@ -115,7 +131,10 @@ export class RemotePlayerController {
     while (history.length > MAX_SNAPSHOTS) history.shift();
   }
 
-  private sampleSnapshot(identity: string, time: number): Pick<Snapshot, "x" | "y" | "vx" | "vy"> | undefined {
+  private sampleSnapshot(
+    identity: string,
+    time: number,
+  ): Pick<Snapshot, "x" | "y" | "vx" | "vy"> | undefined {
     const history = this.snapshots.get(identity);
     if (!history?.length) return undefined;
 
@@ -133,9 +152,8 @@ export class RemotePlayerController {
 
       const previous = history[i - 1];
       const duration = next.receivedAt - previous.receivedAt;
-      const fraction = duration > 0
-        ? (renderTime - previous.receivedAt) / duration
-        : 1;
+      const fraction =
+        duration > 0 ? (renderTime - previous.receivedAt) / duration : 1;
       return {
         x: previous.x + (next.x - previous.x) * fraction,
         y: previous.y + (next.y - previous.y) * fraction,

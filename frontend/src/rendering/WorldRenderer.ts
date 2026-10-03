@@ -1,5 +1,6 @@
 import type { World } from "../state/world";
 import { Background } from "./Background";
+import { ProjectileRenderer } from "./ProjectileRenderer";
 import { ShipRenderer } from "./ShipRenderer";
 
 export class WorldRenderer {
@@ -10,6 +11,7 @@ export class WorldRenderer {
   private offset = { x: 0, y: 0 };
   private background: Background;
   private readonly ships = new ShipRenderer();
+  private readonly projectiles = new ProjectileRenderer();
 
   constructor(canvas: HTMLCanvasElement, world: World) {
     this.canvas = canvas;
@@ -59,7 +61,14 @@ export class WorldRenderer {
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(Math.PI / 2 - entity.rotation);
-      this.ships.draw(ctx, entity.shipType);
+      this.ships.draw(ctx, entity);
+      ctx.restore();
+    }
+
+    for (const projectile of this.world.projectiles.values()) {
+      ctx.save();
+      ctx.translate(origin.x + projectile.x, origin.y - projectile.y);
+      this.projectiles.draw(ctx, projectile.projectileType.tag);
       ctx.restore();
     }
   }

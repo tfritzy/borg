@@ -12,10 +12,6 @@ const PHYSICS_STEPS_PER_SERVER_UPDATE: u32 = PHYSICS_HZ / SERVER_UPDATE_HZ;
 const SERVER_UPDATE_INTERVAL_MICROS: i64 = 1_000_000 / SERVER_UPDATE_HZ as i64;
 const PHYSICS_DELTA_SECONDS: f32 = 1.0 / PHYSICS_HZ as f32;
 
-const PLAYER_MAX_SPEED: f32 = 60.0;
-const PLAYER_THRUST: f32 = 120.0;
-const PLAYER_LINEAR_DAMPING: f32 = 1.5;
-
 pub(crate) fn ensure_simulation_timer(ctx: &ReducerContext) {
     if ctx.db.simulation_timer().count() == 0 {
         ctx.db.simulation_timer().insert(SimulationTimer {
@@ -82,14 +78,15 @@ fn process_inputs(player: &mut Ship, inputs: &mut Vec<InputFrame>) {
 }
 
 fn update_movement(player: &mut Ship, move_x: f32, move_y: f32) {
-    let damping = (-PLAYER_LINEAR_DAMPING * PHYSICS_DELTA_SECONDS).exp();
-    player.vx = (player.vx + move_x * PLAYER_THRUST * PHYSICS_DELTA_SECONDS) * damping;
-    player.vy = (player.vy + move_y * PLAYER_THRUST * PHYSICS_DELTA_SECONDS) * damping;
+    let properties = &player.properties;
+    let damping = (-properties.linear_damping * PHYSICS_DELTA_SECONDS).exp();
+    player.vx = (player.vx + move_x * properties.thrust * PHYSICS_DELTA_SECONDS) * damping;
+    player.vy = (player.vy + move_y * properties.thrust * PHYSICS_DELTA_SECONDS) * damping;
 
     let speed = player.vx.hypot(player.vy);
-    if speed > PLAYER_MAX_SPEED {
-        player.vx *= PLAYER_MAX_SPEED / speed;
-        player.vy *= PLAYER_MAX_SPEED / speed;
+    if speed > properties.max_speed {
+        player.vx *= properties.max_speed / speed;
+        player.vy *= properties.max_speed / speed;
     }
 
     player.x += player.vx * PHYSICS_DELTA_SECONDS;

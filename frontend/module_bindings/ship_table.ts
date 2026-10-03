@@ -11,6 +11,7 @@ import {
 } from "spacetimedb";
 import {
   ShipType,
+  ShipProperties,
   ShipBehavior,
 } from "./types";
 
@@ -21,6 +22,9 @@ export default __t.row({
   owner: __t.option(__t.identity()),
   get shipType() {
     return ShipType.name("ship_type");
+  },
+  get properties() {
+    return ShipProperties;
   },
   x: __t.f32(),
   y: __t.f32(),
