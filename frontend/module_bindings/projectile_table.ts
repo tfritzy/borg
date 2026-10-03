@@ -9,27 +9,17 @@ import {
   type AlgebraicTypeType as __AlgebraicTypeType,
   type Infer as __Infer,
 } from "spacetimedb";
-import {
-  ShipType,
-  ShipBehavior,
-} from "./types";
-
 
 export default __t.row({
   id: __t.u64().primaryKey(),
   worldId: __t.u64().name("world_id"),
-  owner: __t.option(__t.identity()),
-  get shipType() {
-    return ShipType.name("ship_type");
-  },
+  projectileType: __t.string().name("projectile_type"),
   x: __t.f32(),
   y: __t.f32(),
   vx: __t.f32(),
   vy: __t.f32(),
-  buttons: __t.option(__t.u32()),
-  serverTick: __t.u64().name("server_tick"),
-  lastProcessedInputTick: __t.option(__t.u64()).name("last_processed_input_tick"),
-  get behavior() {
-    return __t.option(ShipBehavior);
-  },
+  owner: __t.identity(),
+  ship: __t.u64(),
+  damage: __t.u32(),
+  created: __t.timestamp(),
 });

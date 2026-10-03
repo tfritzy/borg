@@ -12,6 +12,8 @@ pub struct InputFrame {
 pub struct PlayerInputBuffer {
     #[primary_key]
     pub(crate) identity: Identity,
+    #[default(1)]
+    pub(crate) world_id: u64,
     pub(crate) connection_id: ConnectionId,
     pub(crate) inputs: Vec<InputFrame>,
 }

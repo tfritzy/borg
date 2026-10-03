@@ -2,6 +2,7 @@ use crate::tables::{
     player_input_buffer::{player_input_buffer, InputFrame},
     ship::{ship, Ship},
     simulation_timer::{simulation_timer, SimulationTimer},
+    world::DEFAULT_WORLD_ID,
 };
 use spacetimedb::{ReducerContext, Table, TimeDuration};
 
@@ -19,6 +20,7 @@ pub(crate) fn ensure_simulation_timer(ctx: &ReducerContext) {
     if ctx.db.simulation_timer().count() == 0 {
         ctx.db.simulation_timer().insert(SimulationTimer {
             scheduled_id: 0,
+            world_id: DEFAULT_WORLD_ID,
             scheduled_at: TimeDuration::from_micros(SERVER_UPDATE_INTERVAL_MICROS).into(),
             server_tick: 0,
         });
@@ -31,6 +33,7 @@ pub fn update_players(ctx: &ReducerContext, timer: SimulationTimer) -> Result<()
         return Err("The simulation may only be updated by the scheduler".into());
     }
 
+    super::lifecycle::ensure_world(ctx);
     let server_tick = timer.server_tick.saturating_add(1);
     ctx.db
         .simulation_timer()

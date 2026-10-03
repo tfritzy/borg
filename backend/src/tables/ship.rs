@@ -11,6 +11,8 @@ pub struct Ship {
     #[primary_key]
     #[auto_inc]
     pub(crate) id: u64,
+    #[default(1)]
+    pub(crate) world_id: u64,
     pub(crate) owner: Option<Identity>,
     pub(crate) ship_type: ship_type::ShipType,
     pub(crate) x: f32,

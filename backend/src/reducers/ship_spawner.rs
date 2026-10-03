@@ -1,4 +1,5 @@
 use crate::tables::ship::{ship, ship_behavior::ShipBehavior, ship_type::ShipType, Ship};
+use crate::tables::world::DEFAULT_WORLD_ID;
 use spacetimedb::{ReducerContext, Table};
 use std::f32::consts::TAU;
 
@@ -15,6 +16,7 @@ pub(crate) fn update(ctx: &ReducerContext, server_tick: u64, delta_seconds: f32)
     let (sin, cos) = angle.sin_cos();
     ctx.db.ship().insert(Ship {
         id: 0,
+        world_id: DEFAULT_WORLD_ID,
         owner: None,
         ship_type: ShipType::Gat,
         x: radius * cos,

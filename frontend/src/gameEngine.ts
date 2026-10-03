@@ -29,7 +29,7 @@ export class GameEngine {
         if (!this.active) return;
         this.playerController = new PlayerController(connection, this.world);
         this.remotePlayerController = new RemotePlayerController(connection, this.world);
-        this.playerSubscription = subscribeToPlayers(connection);
+        this.playerSubscription = subscribeToPlayers(connection, this.world.id);
       })
       .catch((error: unknown) => {
         if (this.active) {

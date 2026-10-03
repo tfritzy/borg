@@ -39,12 +39,25 @@ import SubmitPlayerInputReducer from "./submit_player_input_reducer";
 // Import all procedure arg schemas
 
 // Import all table schema definitions
+import ProjectileRow from "./projectile_table";
 import ShipRow from "./ship_table";
+import WorldRow from "./world_table";
 
 /** Type-only namespace exports for generated type groups. */
 
 /** The schema information for all tables in this module. This is defined the same was as the tables would have been defined in the server. */
 const tablesSchema = __schema({
+  projectile: __table({
+    name: 'projectile',
+    indexes: [
+      { accessor: 'id', name: 'projectile_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
+      ] },
+    ],
+    constraints: [
+      { name: 'projectile_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, ProjectileRow),
   ship: __table({
     name: 'ship',
     indexes: [
@@ -56,6 +69,17 @@ const tablesSchema = __schema({
       { name: 'ship_id_key', constraint: 'unique', columns: ['id'] },
     ],
   }, ShipRow),
+  world: __table({
+    name: 'world',
+    indexes: [
+      { accessor: 'id', name: 'world_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
+      ] },
+    ],
+    constraints: [
+      { name: 'world_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, WorldRow),
 });
 
 /** The schema information for all reducers in this module. This is defined the same way as the reducers would have been defined in the server, except the body of the reducer is omitted in code generation. */

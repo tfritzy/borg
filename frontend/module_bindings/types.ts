@@ -20,6 +20,7 @@ export type InputFrame = __Infer<typeof InputFrame>;
 
 export const PlayerInputBuffer = __t.object("PlayerInputBuffer", {
   identity: __t.identity(),
+  worldId: __t.u64(),
   connectionId: __t.connectionId(),
   get inputs() {
     return __t.array(InputFrame);
@@ -27,8 +28,24 @@ export const PlayerInputBuffer = __t.object("PlayerInputBuffer", {
 });
 export type PlayerInputBuffer = __Infer<typeof PlayerInputBuffer>;
 
+export const Projectile = __t.object("Projectile", {
+  id: __t.u64(),
+  worldId: __t.u64(),
+  projectileType: __t.string(),
+  x: __t.f32(),
+  y: __t.f32(),
+  vx: __t.f32(),
+  vy: __t.f32(),
+  owner: __t.identity(),
+  ship: __t.u64(),
+  damage: __t.u32(),
+  created: __t.timestamp(),
+});
+export type Projectile = __Infer<typeof Projectile>;
+
 export const Ship = __t.object("Ship", {
   id: __t.u64(),
+  worldId: __t.u64(),
   owner: __t.option(__t.identity()),
   get shipType() {
     return ShipType;
@@ -61,8 +78,14 @@ export type ShipType = __Infer<typeof ShipType>;
 
 export const SimulationTimer = __t.object("SimulationTimer", {
   scheduledId: __t.u64(),
+  worldId: __t.u64(),
   scheduledAt: __t.scheduleAt(),
   serverTick: __t.u64(),
 });
 export type SimulationTimer = __Infer<typeof SimulationTimer>;
+
+export const World = __t.object("World", {
+  id: __t.u64(),
+});
+export type World = __Infer<typeof World>;
 

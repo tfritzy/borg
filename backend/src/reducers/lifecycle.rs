@@ -1,16 +1,27 @@
 use crate::tables::{
     player_input_buffer::{player_input_buffer, PlayerInputBuffer},
     ship::{ship, Ship},
+    world::{world, World, DEFAULT_WORLD_ID},
 };
 use spacetimedb::{ReducerContext, Table};
 
 #[spacetimedb::reducer(init)]
 pub fn init(ctx: &ReducerContext) {
+    ensure_world(ctx);
     super::simulation::ensure_simulation_timer(ctx);
+}
+
+pub(crate) fn ensure_world(ctx: &ReducerContext) {
+    if ctx.db.world().id().find(DEFAULT_WORLD_ID).is_none() {
+        ctx.db.world().insert(World {
+            id: DEFAULT_WORLD_ID,
+        });
+    }
 }
 
 #[spacetimedb::reducer(client_connected)]
 pub fn identity_connected(ctx: &ReducerContext) {
+    ensure_world(ctx);
     super::simulation::ensure_simulation_timer(ctx);
 
     let identity = ctx.sender();
@@ -25,6 +36,7 @@ pub fn identity_connected(ctx: &ReducerContext) {
         .find(|ship| ship.owner == Some(identity));
     let ship = Ship {
         id: existing.as_ref().map_or(0, |ship| ship.id),
+        world_id: DEFAULT_WORLD_ID,
         owner: Some(identity),
         ship_type: crate::tables::ship::ship_type::ShipType::Raven,
         x: 0.0,
@@ -44,6 +56,7 @@ pub fn identity_connected(ctx: &ReducerContext) {
 
     let input_buffer = PlayerInputBuffer {
         identity,
+        world_id: DEFAULT_WORLD_ID,
         connection_id,
         inputs: Vec::new(),
     };
