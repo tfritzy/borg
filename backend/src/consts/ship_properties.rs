@@ -16,7 +16,7 @@ pub(crate) const SHIP_PROPERTIES: [(ShipType, ShipProperties); 2] = [
     (
         ShipType::Raven,
         ShipProperties {
-            projectile_speed: 300.0,
+            projectile_speed: 180.0,
             damage: 1,
             thrust: 120.0,
             max_speed: 60.0,
@@ -27,7 +27,7 @@ pub(crate) const SHIP_PROPERTIES: [(ShipType, ShipProperties); 2] = [
     (
         ShipType::Gat,
         ShipProperties {
-            projectile_speed: 250.0,
+            projectile_speed: 150.0,
             damage: 2,
             thrust: 80.0,
             max_speed: 40.0,

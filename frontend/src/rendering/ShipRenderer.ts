@@ -38,7 +38,7 @@ export class ShipRenderer {
       const x = -ctx.measureText(phrase).width / 2;
       const y = -sprite.height / 2 - 4;
       if (typed) {
-        ctx.fillStyle = "rgba(0, 0, 0, 0)";
+        ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
         ctx.fillText(typed, x, y);
       }
       ctx.fillStyle = "#000000";

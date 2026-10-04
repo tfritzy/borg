@@ -1,15 +1,20 @@
 import { Entity } from "./Entity";
 import { Label } from "./Label";
-import type { ShipType } from "../types";
-import type { Vector2 } from "../util/Vector2";
+import type { Ship } from "../types";
+import { Vector2 } from "../util/Vector2";
 
 export class ShipEntity extends Entity {
-  shipType: ShipType;
+  row: Ship;
   label: Label | null = null;
 
-  constructor(position: Vector2, shipType: ShipType) {
-    super("ship", position);
-    this.shipType = shipType;
+  constructor(row: Ship) {
+    super("ship", new Vector2(row.x, row.y));
+    this.id = row.id.toString();
+    this.row = row;
+  }
+
+  get shipType(): Ship["shipType"]["tag"] {
+    return this.row.shipType.tag;
   }
 
   rollLabel(): void {

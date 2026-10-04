@@ -67,8 +67,8 @@ export class WorldRenderer {
 
     for (const projectile of this.world.projectiles.values()) {
       ctx.save();
-      ctx.translate(origin.x + projectile.x, origin.y - projectile.y);
-      this.projectiles.draw(ctx, projectile.projectileType.tag);
+      ctx.translate(origin.x + projectile.position.x, origin.y - projectile.position.y);
+      this.projectiles.draw(ctx, projectile.row.projectileType.tag);
       ctx.restore();
     }
   }

@@ -16,7 +16,11 @@ export class Label {
   }
 
   type(key: string): boolean {
-    if (!this.phrase || this.phrase[this.i]?.toLowerCase() !== key.toLowerCase()) {
+    if (
+      !this.phrase ||
+      this.phrase[this.i]?.toLowerCase() !== key.toLowerCase()
+    ) {
+      this.i = 0;
       return false;
     }
     this.i++;
@@ -26,10 +30,7 @@ export class Label {
   }
 
   roll(): void {
-    const MAX_LINE_LENGTH = 80;
     this.i = 0;
-    this.phrase = COMMON_WORDS[
-      Math.floor(Math.random() * COMMON_WORDS.length)
-    ].slice(0, MAX_LINE_LENGTH);
+    this.phrase = COMMON_WORDS[Math.floor(Math.random() * COMMON_WORDS.length)];
   }
 }

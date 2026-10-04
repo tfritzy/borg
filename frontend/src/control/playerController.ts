@@ -2,12 +2,13 @@ import type { DbConnection } from "../../module_bindings";
 import type { ShipEntity } from "../state/Ship";
 import type { World } from "../state/world";
 import type { Ship } from "../types";
+import { leadDirection } from "./aim";
+import { TYPING_RANGE } from "./consts";
 import { advance, STEP_MS, type MovementState } from "./movement";
 import { syncShipMetadata } from "./syncShipMetadata";
 
 const MAX_FRAME_MS = 250;
 const MAX_PENDING_INPUTS = 120;
-const TYPING_RANGE = 500;
 
 const MOVEMENT_KEYS = new Set([
   "w",
@@ -167,7 +168,7 @@ export class PlayerController {
   };
 
   private typeCharacter(key: string): void {
-    if (!this.ship || !this.state || !this.connection.isActive || document.hidden) return;
+    if (!this.ship || !this.state || !this.properties || !this.connection.isActive || document.hidden) return;
 
     for (const target of this.world.entities.values()) {
       if (target === this.ship || !target.label) continue;
@@ -177,10 +178,11 @@ export class PlayerController {
       if (distance === 0 || distance > TYPING_RANGE) continue;
 
       if (!target.label.type(key)) continue;
+      const direction = leadDirection(this.state, target.row, this.properties.projectileSpeed);
       void this.connection.reducers.fire({
         shipId: BigInt(this.ship.id),
-        directionX: dx / distance,
-        directionY: dy / distance,
+        directionX: direction.x,
+        directionY: direction.y,
       });
     }
   }

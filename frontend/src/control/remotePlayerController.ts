@@ -1,11 +1,8 @@
 import type { DbConnection } from "../../module_bindings";
 import type { World } from "../state/world";
 import type { Ship } from "../types";
+import { INTERPOLATION_DELAY_MS, MAX_SNAPSHOTS } from "./consts";
 import { syncShipMetadata } from "./syncShipMetadata";
-
-// Server positions arrive at 10 Hz; hold a little over one update for interpolation.
-const INTERPOLATION_DELAY_MS = 150;
-const MAX_SNAPSHOTS = 32;
 
 type Snapshot = {
   x: number;
@@ -36,10 +33,6 @@ export class RemotePlayerController {
   private readonly onPlayerInsert = (_ctx: unknown, player: Ship) => {
     if (player.owner?.toHexString() === this.identity) return;
     this.syncPlayer(player);
-    const entity = this.world.entities.get(player.id.toString());
-    if (entity && !entity.label) {
-      entity.rollLabel();
-    }
   };
 
   private readonly onPlayerUpdate = (
@@ -68,7 +61,8 @@ export class RemotePlayerController {
       return;
     }
 
-    syncShipMetadata(this.world, player);
+    const entity = syncShipMetadata(this.world, player);
+    if (!entity.label) entity.rollLabel();
     this.recordSnapshot(id, player, performance.now());
   }
 

@@ -45,6 +45,9 @@ export class GameEngine {
       this.world.time = time;
       this.playerController?.update(this.world.time);
       this.remotePlayerController?.update(this.world.time);
+      for (const projectile of this.world.projectiles.values()) {
+        projectile.update(this.world.time);
+      }
       render();
       this.frameId = requestAnimationFrame(loop);
     };
