@@ -34,6 +34,7 @@ import {
 } from "spacetimedb";
 
 // Import all reducer arg schemas
+import FireReducer from "./fire_reducer";
 import SubmitPlayerInputReducer from "./submit_player_input_reducer";
 
 // Import all procedure arg schemas
@@ -84,6 +85,7 @@ const tablesSchema = __schema({
 
 /** The schema information for all reducers in this module. This is defined the same way as the reducers would have been defined in the server, except the body of the reducer is omitted in code generation. */
 const reducersSchema = __reducers(
+  __reducerSchema("fire", FireReducer),
   __reducerSchema("submit_player_input", SubmitPlayerInputReducer),
 );
 

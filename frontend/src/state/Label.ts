@@ -15,8 +15,19 @@ export class Label {
     this.phrase = phrase;
   }
 
+  type(key: string): boolean {
+    if (!this.phrase || this.phrase[this.i]?.toLowerCase() !== key.toLowerCase()) {
+      return false;
+    }
+    this.i++;
+    if (this.i < this.phrase.length) return false;
+    this.roll();
+    return true;
+  }
+
   roll(): void {
     const MAX_LINE_LENGTH = 80;
+    this.i = 0;
     this.phrase = COMMON_WORDS[
       Math.floor(Math.random() * COMMON_WORDS.length)
     ].slice(0, MAX_LINE_LENGTH);

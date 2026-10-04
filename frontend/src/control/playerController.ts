@@ -7,6 +7,7 @@ import { syncShipMetadata } from "./syncShipMetadata";
 
 const MAX_FRAME_MS = 250;
 const MAX_PENDING_INPUTS = 120;
+const TYPING_RANGE = 500;
 
 const MOVEMENT_KEYS = new Set([
   "w",
@@ -148,10 +149,41 @@ export class PlayerController {
 
   private readonly onKeyDown = (event: KeyboardEvent) => {
     const key = event.key.toLowerCase();
-    if (!MOVEMENT_KEYS.has(key)) return;
-    event.preventDefault();
-    this.keys.add(key);
+    const target = event.target as HTMLElement | null;
+    if (
+      target?.isContentEditable || target?.tagName === "INPUT" ||
+      target?.tagName === "TEXTAREA"
+    ) return;
+    if (MOVEMENT_KEYS.has(key)) {
+      event.preventDefault();
+      this.keys.add(key);
+    }
+    if (
+      event.repeat || event.isComposing || event.ctrlKey || event.altKey ||
+      event.metaKey || !/^[a-z]$/.test(key)
+    ) return;
+
+    this.typeCharacter(key);
   };
+
+  private typeCharacter(key: string): void {
+    if (!this.ship || !this.state || !this.connection.isActive || document.hidden) return;
+
+    for (const target of this.world.entities.values()) {
+      if (target === this.ship || !target.label) continue;
+      const dx = target.position.x - this.state.x;
+      const dy = target.position.y - this.state.y;
+      const distance = Math.hypot(dx, dy);
+      if (distance === 0 || distance > TYPING_RANGE) continue;
+
+      if (!target.label.type(key)) continue;
+      void this.connection.reducers.fire({
+        shipId: BigInt(this.ship.id),
+        directionX: dx / distance,
+        directionY: dy / distance,
+      });
+    }
+  }
 
   private readonly onKeyUp = (event: KeyboardEvent) => {
     const key = event.key.toLowerCase();

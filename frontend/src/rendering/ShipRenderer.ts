@@ -30,11 +30,19 @@ export class ShipRenderer {
     if (entity.label?.phrase) {
       ctx.save();
       ctx.rotate(entity.rotation - Math.PI / 2);
-      ctx.fillStyle = "#000000";
       ctx.font = "12px sans-serif";
-      ctx.textAlign = "center";
+      ctx.textAlign = "left";
       ctx.textBaseline = "bottom";
-      ctx.fillText(entity.label.phrase, 0, -sprite.height / 2 - 4);
+      const { phrase, i } = entity.label;
+      const typed = phrase.slice(0, i);
+      const x = -ctx.measureText(phrase).width / 2;
+      const y = -sprite.height / 2 - 4;
+      if (typed) {
+        ctx.fillStyle = "rgba(0, 0, 0, 0)";
+        ctx.fillText(typed, x, y);
+      }
+      ctx.fillStyle = "#000000";
+      ctx.fillText(phrase.slice(i), x + ctx.measureText(typed).width, y);
       ctx.restore();
     }
   }

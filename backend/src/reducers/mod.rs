@@ -1,3 +1,4 @@
+mod fire;
 mod lifecycle;
 mod player_input;
 mod ship_behavior;
