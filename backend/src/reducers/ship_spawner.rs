@@ -1,3 +1,4 @@
+use crate::reducers::collision::grid_cell;
 use crate::tables::ship::{
     ship, ship_behavior::ShipBehavior, ship_properties::get_ship_properties, ship_type::ShipType,
     Ship,
@@ -39,6 +40,10 @@ pub(crate) fn update(
         properties,
         x,
         y,
+        grid_x: grid_cell(x),
+        grid_y: grid_cell(y),
+        max_health: properties.max_health,
+        health: properties.max_health,
         vx: dx / distance * properties.max_speed,
         vy: dy / distance * properties.max_speed,
         buttons: None,

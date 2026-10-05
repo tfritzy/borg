@@ -35,14 +35,19 @@ pub fn identity_connected(ctx: &ReducerContext) {
         .ship()
         .iter()
         .find(|ship| ship.owner == Some(identity));
+    let properties = *get_ship_properties(&ShipType::Raven);
     let ship = Ship {
         id: existing.as_ref().map_or(0, |ship| ship.id),
         world_id: DEFAULT_WORLD_ID,
         owner: Some(identity),
         ship_type: ShipType::Raven,
-        properties: *get_ship_properties(&ShipType::Raven),
+        properties,
         x: 0.0,
         y: 0.0,
+        grid_x: 0,
+        grid_y: 0,
+        max_health: properties.max_health,
+        health: properties.max_health,
         vx: 0.0,
         vy: 0.0,
         buttons: Some(0),

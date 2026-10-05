@@ -9,7 +9,9 @@ pub(crate) mod ship_behavior;
 #[path = "../consts/ship_properties.rs"]
 pub(crate) mod ship_properties;
 
-#[spacetimedb::table(accessor = ship, public)]
+#[spacetimedb::table(accessor = ship, public,
+    index(accessor = grid_cell, hash(columns = [grid_x, grid_y]))
+)]
 pub struct Ship {
     #[primary_key]
     #[auto_inc]
@@ -21,6 +23,12 @@ pub struct Ship {
     pub(crate) properties: ship_properties::ShipProperties,
     pub(crate) x: f32,
     pub(crate) y: f32,
+    #[default(0)]
+    pub(crate) grid_x: i32,
+    #[default(0)]
+    pub(crate) grid_y: i32,
+    pub(crate) max_health: u32,
+    pub(crate) health: u32,
     #[default(0.0)]
     pub(crate) vx: f32,
     #[default(0.0)]

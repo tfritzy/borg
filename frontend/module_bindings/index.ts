@@ -62,6 +62,10 @@ const tablesSchema = __schema({
   ship: __table({
     name: 'ship',
     indexes: [
+      { accessor: 'grid_cell', name: 'ship_grid_x_grid_y_idx_hash', algorithm: 'btree', columns: [
+        'gridX',
+        'gridY',
+      ] },
       { accessor: 'id', name: 'ship_id_idx_btree', algorithm: 'btree', columns: [
         'id',
       ] },

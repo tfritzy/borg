@@ -11,6 +11,7 @@ const SERVER_UPDATE_HZ: u32 = 10;
 const PHYSICS_HZ: u32 = 60;
 const PHYSICS_STEPS_PER_SERVER_UPDATE: u32 = PHYSICS_HZ / SERVER_UPDATE_HZ;
 const SERVER_UPDATE_INTERVAL_MICROS: i64 = 1_000_000 / SERVER_UPDATE_HZ as i64;
+const SERVER_DELTA_SECONDS: f32 = SERVER_UPDATE_INTERVAL_MICROS as f32 / 1_000_000.0;
 const PHYSICS_DELTA_SECONDS: f32 = 1.0 / PHYSICS_HZ as f32;
 const PROJECTILE_LIFETIME_SECONDS: f32 = 6.0;
 
@@ -52,10 +53,7 @@ pub fn update_players(ctx: &ReducerContext, timer: SimulationTimer) -> Result<()
     for mut ship in ships {
         ship.server_tick = server_tick;
         if ship.behavior.is_some() {
-            super::ship_behavior::update(
-                &mut ship,
-                SERVER_UPDATE_INTERVAL_MICROS as f32 / 1_000_000.0,
-            );
+            super::ship_behavior::update(&mut ship, SERVER_DELTA_SECONDS);
         } else if let Some(mut input_buffer) = ship
             .owner
             .and_then(|owner| ctx.db.player_input_buffer().identity().find(owner))
@@ -69,6 +67,9 @@ pub fn update_players(ctx: &ReducerContext, timer: SimulationTimer) -> Result<()
             constrain_player(&mut ship, radius);
         }
 
+        ship.grid_x = super::collision::grid_cell(ship.x);
+        ship.grid_y = super::collision::grid_cell(ship.y);
+
         if ship.behavior.is_some() && ship.x.hypot(ship.y) > radius + AI_DESPAWN_MARGIN {
             ctx.db.ship().id().delete(ship.id);
         } else {
@@ -76,16 +77,23 @@ pub fn update_players(ctx: &ReducerContext, timer: SimulationTimer) -> Result<()
         }
     }
 
-    super::ship_spawner::update(
-        ctx,
-        server_tick,
-        SERVER_UPDATE_INTERVAL_MICROS as f32 / 1_000_000.0,
-        radius,
-    );
+    super::ship_spawner::update(ctx, server_tick, SERVER_DELTA_SECONDS, radius);
 
     for mut projectile in ctx.db.projectile().iter().collect::<Vec<_>>() {
-        projectile.x += projectile.vx * SERVER_UPDATE_INTERVAL_MICROS as f32 / 1_000_000.0;
-        projectile.y += projectile.vy * SERVER_UPDATE_INTERVAL_MICROS as f32 / 1_000_000.0;
+        projectile.x += projectile.vx * SERVER_DELTA_SECONDS;
+        projectile.y += projectile.vy * SERVER_DELTA_SECONDS;
+        if let Some(ship_id) = super::collision::first_ship_hit(ctx, &projectile) {
+            if let Some(mut ship) = ctx.db.ship().id().find(ship_id) {
+                ship.health = ship.health.saturating_sub(projectile.damage);
+                if ship.health == 0 {
+                    ctx.db.ship().id().delete(ship_id);
+                } else {
+                    ctx.db.ship().id().update(ship);
+                }
+            }
+            ctx.db.projectile().id().delete(projectile.id);
+            continue;
+        }
         if ctx
             .timestamp
             .duration_since(projectile.created)

@@ -1,3 +1,4 @@
+mod collision;
 mod fire;
 mod lifecycle;
 mod player_input;
