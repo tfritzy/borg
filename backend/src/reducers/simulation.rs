@@ -3,7 +3,7 @@ use crate::tables::{
     projectile::projectile,
     ship::{ship, Ship},
     simulation_timer::{simulation_timer, SimulationTimer},
-    world::DEFAULT_WORLD_ID,
+    world::{world, AI_DESPAWN_MARGIN, DEFAULT_WORLD_ID},
 };
 use spacetimedb::{ReducerContext, Table, TimeDuration};
 
@@ -32,6 +32,13 @@ pub fn update_players(ctx: &ReducerContext, timer: SimulationTimer) -> Result<()
     }
 
     super::lifecycle::ensure_world(ctx);
+    let radius = ctx
+        .db
+        .world()
+        .id()
+        .find(timer.world_id)
+        .ok_or_else(|| "Simulation world does not exist".to_string())?
+        .radius;
     let server_tick = timer.server_tick.saturating_add(1);
     ctx.db
         .simulation_timer()
@@ -53,18 +60,27 @@ pub fn update_players(ctx: &ReducerContext, timer: SimulationTimer) -> Result<()
             .owner
             .and_then(|owner| ctx.db.player_input_buffer().identity().find(owner))
         {
-            process_inputs(&mut ship, &mut input_buffer.inputs);
+            process_inputs(&mut ship, &mut input_buffer.inputs, radius);
 
             ctx.db.player_input_buffer().identity().update(input_buffer);
         }
 
-        ctx.db.ship().id().update(ship);
+        if ship.owner.is_some() && ship.behavior.is_none() {
+            constrain_player(&mut ship, radius);
+        }
+
+        if ship.behavior.is_some() && ship.x.hypot(ship.y) > radius + AI_DESPAWN_MARGIN {
+            ctx.db.ship().id().delete(ship.id);
+        } else {
+            ctx.db.ship().id().update(ship);
+        }
     }
 
     super::ship_spawner::update(
         ctx,
         server_tick,
         SERVER_UPDATE_INTERVAL_MICROS as f32 / 1_000_000.0,
+        radius,
     );
 
     for mut projectile in ctx.db.projectile().iter().collect::<Vec<_>>() {
@@ -84,16 +100,16 @@ pub fn update_players(ctx: &ReducerContext, timer: SimulationTimer) -> Result<()
     Ok(())
 }
 
-fn process_inputs(player: &mut Ship, inputs: &mut Vec<InputFrame>) {
+fn process_inputs(player: &mut Ship, inputs: &mut Vec<InputFrame>, radius: f32) {
     let count = inputs.len().min(PHYSICS_STEPS_PER_SERVER_UPDATE as usize);
     for input in inputs.drain(..count) {
-        update_movement(player, input.move_x, input.move_y);
+        update_movement(player, input.move_x, input.move_y, radius);
         player.buttons = Some(input.buttons);
         player.last_processed_input_tick = Some(input.input_tick);
     }
 }
 
-fn update_movement(player: &mut Ship, move_x: f32, move_y: f32) {
+fn update_movement(player: &mut Ship, move_x: f32, move_y: f32, radius: f32) {
     let properties = &player.properties;
     let damping = (-properties.linear_damping * PHYSICS_DELTA_SECONDS).exp();
     player.vx = (player.vx + move_x * properties.thrust * PHYSICS_DELTA_SECONDS) * damping;
@@ -107,4 +123,20 @@ fn update_movement(player: &mut Ship, move_x: f32, move_y: f32) {
 
     player.x += player.vx * PHYSICS_DELTA_SECONDS;
     player.y += player.vy * PHYSICS_DELTA_SECONDS;
+    constrain_player(player, radius);
+}
+
+fn constrain_player(player: &mut Ship, radius: f32) {
+    let distance = player.x.hypot(player.y);
+    if distance <= radius {
+        return;
+    }
+
+    let nx = player.x / distance;
+    let ny = player.y / distance;
+    player.x = nx * radius;
+    player.y = ny * radius;
+    let outward_speed = (player.vx * nx + player.vy * ny).max(0.0);
+    player.vx -= outward_speed * nx;
+    player.vy -= outward_speed * ny;
 }

@@ -8,7 +8,6 @@ export class WorldRenderer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private resizeObserver: ResizeObserver | null = null;
-  private offset = { x: 0, y: 0 };
   private background: Background;
   private readonly ships = new ShipRenderer();
   private readonly projectiles = new ProjectileRenderer();
@@ -34,25 +33,21 @@ export class WorldRenderer {
     this.canvas.height = Math.round(rect.height * dpr);
   }
 
-  setOffset(x: number, y: number) {
-    this.offset.x = x;
-    this.offset.y = y;
-  }
-
   render(connectionIdentity: string | undefined) {
     const { ctx, canvas } = this;
+    this.world.camera.update(this.world);
     const dpr = window.devicePixelRatio || 1;
     const width = canvas.width / dpr;
     const height = canvas.height / dpr;
     const origin = {
-      x: width / 2 - this.offset.x,
-      y: height / 2 + this.offset.y,
+      x: width / 2 - this.world.camera.x,
+      y: height / 2 + this.world.camera.y,
     };
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
 
-    this.background.render(origin);
+    this.background.render(origin, this.world.row?.radius ?? null);
 
     for (const entity of this.world.entities.values()) {
       const x = origin.x + entity.position.x;

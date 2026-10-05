@@ -108,6 +108,7 @@ export type SimulationTimer = __Infer<typeof SimulationTimer>;
 
 export const World = __t.object("World", {
   id: __t.u64(),
+  radius: __t.f32(),
 });
 export type World = __Infer<typeof World>;
 

@@ -77,6 +77,7 @@ export class PlayerController {
   };
 
   private resetPrediction(): void {
+    this.world.camera.follow(null);
     this.ship = undefined;
     this.properties = undefined;
     this.state = undefined;
@@ -95,6 +96,7 @@ export class PlayerController {
       return;
     }
     this.ship = syncShipMetadata(this.world, ship);
+    this.world.camera.follow(this.ship.id);
     this.properties = ship.properties;
     const lastProcessedInputTick = ship.lastProcessedInputTick ?? 0n;
     this.nextInputTick =
@@ -114,8 +116,11 @@ export class PlayerController {
       vx: ship.vx,
       vy: ship.vy,
     };
-    for (const input of this.pendingInputs) {
-      advance(state, input.moveX, input.moveY, this.properties);
+    const worldRow = this.world.row;
+    if (worldRow) {
+      for (const input of this.pendingInputs) {
+        advance(state, input.moveX, input.moveY, this.properties, worldRow.radius);
+      }
     }
     if (this.previousState && this.state) {
       // Correct both interpolation endpoints so an acknowledgement does not
@@ -140,6 +145,12 @@ export class PlayerController {
       this.previousState.x + (this.state.x - this.previousState.x) * alpha;
     this.ship.position.y =
       this.previousState.y + (this.state.y - this.previousState.y) * alpha;
+    const distance = Math.hypot(this.ship.position.x, this.ship.position.y);
+    const worldRow = this.world.row;
+    if (worldRow && distance > worldRow.radius) {
+      this.ship.position.x *= worldRow.radius / distance;
+      this.ship.position.y *= worldRow.radius / distance;
+    }
     const vx =
       this.previousState.vx + (this.state.vx - this.previousState.vx) * alpha;
     const vy =
@@ -209,6 +220,7 @@ export class PlayerController {
     if (
       !this.state ||
       !this.properties ||
+      !this.world.row ||
       !this.connection.isActive ||
       document.hidden
     ) {
@@ -241,10 +253,11 @@ export class PlayerController {
   }
 
   private submitInput(moveX: number, moveY: number): void {
-    if (!this.state || !this.properties || !this.connection.isActive) return;
+    const worldRow = this.world.row;
+    if (!this.state || !this.properties || !worldRow || !this.connection.isActive) return;
     const input = { tick: ++this.nextInputTick, moveX, moveY };
     this.pendingInputs.push(input);
-    advance(this.state, moveX, moveY, this.properties);
+    advance(this.state, moveX, moveY, this.properties, worldRow.radius);
     void this.connection.reducers
       .submitPlayerInput({
         inputTick: input.tick,
@@ -265,6 +278,7 @@ export class PlayerController {
     if (this.disposed) return;
     this.releaseKeys();
     this.disposed = true;
+    this.world.camera.follow(null);
     document.removeEventListener("keydown", this.onKeyDown);
     document.removeEventListener("keyup", this.onKeyUp);
     window.removeEventListener("blur", this.releaseKeys);

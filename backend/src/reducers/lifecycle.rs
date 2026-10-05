@@ -1,7 +1,7 @@
 use crate::tables::{
     player_input_buffer::{player_input_buffer, PlayerInputBuffer},
     ship::{ship, ship_properties::get_ship_properties, ship_type::ShipType, Ship},
-    world::{world, World, DEFAULT_WORLD_ID},
+    world::{world, World, DEFAULT_WORLD_ID, DEFAULT_WORLD_RADIUS},
 };
 use spacetimedb::{ReducerContext, Table};
 
@@ -15,6 +15,7 @@ pub(crate) fn ensure_world(ctx: &ReducerContext) {
     if ctx.db.world().id().find(DEFAULT_WORLD_ID).is_none() {
         ctx.db.world().insert(World {
             id: DEFAULT_WORLD_ID,
+            radius: DEFAULT_WORLD_RADIUS,
         });
     }
 }

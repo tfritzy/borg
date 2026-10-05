@@ -7,10 +7,18 @@ export class Background {
     this.ctx = ctx;
   }
 
-  render(origin: { x: number; y: number }) {
+  render(origin: { x: number; y: number }, radius: number | null) {
     const { ctx, canvas } = this;
     const dpr = window.devicePixelRatio || 1;
 
+    ctx.fillStyle = radius === null ? "#ffffff" : "#e9edf1";
+    ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+    if (radius === null) return;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(origin.x, origin.y, radius, 0, Math.PI * 2);
+    ctx.clip();
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
 
@@ -32,6 +40,13 @@ export class Background {
       ctx.lineTo(canvas.width / dpr, Math.round(y) + 0.5);
     }
 
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.strokeStyle = "#768696";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(origin.x, origin.y, radius, 0, Math.PI * 2);
     ctx.stroke();
   }
 }

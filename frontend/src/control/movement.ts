@@ -16,6 +16,7 @@ export function advance(
   moveX: number,
   moveY: number,
   properties: MovementProperties,
+  radius: number,
 ): void {
   const damping = Math.exp(-properties.linearDamping * STEP_SECONDS);
   state.vx = (state.vx + moveX * properties.thrust * STEP_SECONDS) * damping;
@@ -29,4 +30,15 @@ export function advance(
 
   state.x += state.vx * STEP_SECONDS;
   state.y += state.vy * STEP_SECONDS;
+
+  const distance = Math.hypot(state.x, state.y);
+  if (distance > radius) {
+    const nx = state.x / distance;
+    const ny = state.y / distance;
+    state.x = nx * radius;
+    state.y = ny * radius;
+    const outwardSpeed = Math.max(0, state.vx * nx + state.vy * ny);
+    state.vx -= outwardSpeed * nx;
+    state.vy -= outwardSpeed * ny;
+  }
 }

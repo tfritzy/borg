@@ -5,6 +5,7 @@ import { World } from "./state/world";
 import { Database } from "./util/db";
 import { subscribeToWorld } from "./util/subscriptions";
 import { watchProjectiles } from "./util/watchProjectiles";
+import { watchWorld } from "./util/watchWorld";
 
 export class GameEngine {
   readonly world: World;
@@ -14,6 +15,7 @@ export class GameEngine {
   private playerController: PlayerController | undefined;
   private remotePlayerController: RemotePlayerController | undefined;
   private unwatchProjectiles: (() => void) | undefined;
+  private unwatchWorld: (() => void) | undefined;
   private worldSubscription: SubscriptionHandle | undefined;
 
   constructor(world: World = new World(), database: Database = new Database()) {
@@ -35,6 +37,7 @@ export class GameEngine {
           this.world,
         );
         this.unwatchProjectiles = watchProjectiles(connection, this.world);
+        this.unwatchWorld = watchWorld(connection, this.world);
         this.worldSubscription = subscribeToWorld(connection, this.world.id);
       })
       .catch((error: unknown) => {
@@ -66,6 +69,8 @@ export class GameEngine {
     this.remotePlayerController = undefined;
     this.unwatchProjectiles?.();
     this.unwatchProjectiles = undefined;
+    this.unwatchWorld?.();
+    this.unwatchWorld = undefined;
     this.worldSubscription?.unsubscribe();
     this.worldSubscription = undefined;
 

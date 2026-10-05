@@ -12,4 +12,5 @@ import {
 
 export default __t.row({
   id: __t.u64().primaryKey(),
+  radius: __t.f32(),
 });
