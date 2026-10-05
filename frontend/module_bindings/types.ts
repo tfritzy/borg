@@ -41,6 +41,7 @@ export const Projectile = __t.object("Projectile", {
   owner: __t.identity(),
   ship: __t.u64(),
   damage: __t.u32(),
+  lifetimeSeconds: __t.f32(),
   created: __t.timestamp(),
 });
 export type Projectile = __Infer<typeof Projectile>;
@@ -86,8 +87,10 @@ export type ShipBehavior = __Infer<typeof ShipBehavior>;
 
 export const ShipProperties = __t.object("ShipProperties", {
   projectileSpeed: __t.f32(),
+  projectileLifetime: __t.f32(),
   range: __t.f32(),
   damage: __t.u32(),
+  projectileCount: __t.u32(),
   maxHealth: __t.u32(),
   radius: __t.f32(),
   thrust: __t.f32(),
@@ -101,6 +104,9 @@ export type ShipProperties = __Infer<typeof ShipProperties>;
 export const ShipType = __t.enum("ShipType", {
   Raven: __t.unit(),
   Gat: __t.unit(),
+  Cottonwood: __t.unit(),
+  Archer: __t.unit(),
+  Hummingbird: __t.unit(),
 });
 export type ShipType = __Infer<typeof ShipType>;
 

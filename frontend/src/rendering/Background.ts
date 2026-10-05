@@ -26,7 +26,7 @@ export class Background {
     const startX = ((origin.x % gridSize) + gridSize) % gridSize;
     const startY = ((origin.y % gridSize) + gridSize) % gridSize;
 
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.12)";
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.025)";
     ctx.lineWidth = 1;
     ctx.beginPath();
 

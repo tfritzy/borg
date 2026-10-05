@@ -18,5 +18,6 @@ pub struct Projectile {
     pub(crate) owner: Identity,
     pub(crate) ship: u64,
     pub(crate) damage: u32,
+    pub(crate) lifetime_seconds: f32,
     pub(crate) created: Timestamp,
 }

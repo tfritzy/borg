@@ -2,4 +2,7 @@
 pub enum ShipType {
     Raven,
     Gat,
+    Cottonwood,
+    Archer,
+    Hummingbird,
 }

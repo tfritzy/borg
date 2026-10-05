@@ -35,12 +35,18 @@ pub fn identity_connected(ctx: &ReducerContext) {
         .ship()
         .iter()
         .find(|ship| ship.owner == Some(identity));
-    let properties = *get_ship_properties(&ShipType::Raven);
+    let ship_type = match ctx.random::<u32>() % 4 {
+        0 => ShipType::Raven,
+        1 => ShipType::Cottonwood,
+        2 => ShipType::Archer,
+        _ => ShipType::Hummingbird,
+    };
+    let properties = *get_ship_properties(&ship_type);
     let ship = Ship {
         id: existing.as_ref().map_or(0, |ship| ship.id),
         world_id: DEFAULT_WORLD_ID,
         owner: Some(identity),
-        ship_type: ShipType::Raven,
+        ship_type,
         properties,
         x: 0.0,
         y: 0.0,

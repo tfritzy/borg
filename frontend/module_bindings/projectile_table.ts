@@ -27,5 +27,6 @@ export default __t.row({
   owner: __t.identity(),
   ship: __t.u64(),
   damage: __t.u32(),
+  lifetimeSeconds: __t.f32().name("lifetime_seconds"),
   created: __t.timestamp(),
 });

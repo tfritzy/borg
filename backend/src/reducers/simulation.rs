@@ -13,7 +13,6 @@ const PHYSICS_STEPS_PER_SERVER_UPDATE: u32 = PHYSICS_HZ / SERVER_UPDATE_HZ;
 const SERVER_UPDATE_INTERVAL_MICROS: i64 = 1_000_000 / SERVER_UPDATE_HZ as i64;
 const SERVER_DELTA_SECONDS: f32 = SERVER_UPDATE_INTERVAL_MICROS as f32 / 1_000_000.0;
 const PHYSICS_DELTA_SECONDS: f32 = 1.0 / PHYSICS_HZ as f32;
-const PROJECTILE_LIFETIME_SECONDS: f32 = 6.0;
 
 pub(crate) fn ensure_simulation_timer(ctx: &ReducerContext) {
     if ctx.db.simulation_timer().count() == 0 {
@@ -97,7 +96,7 @@ pub fn update_players(ctx: &ReducerContext, timer: SimulationTimer) -> Result<()
         if ctx
             .timestamp
             .duration_since(projectile.created)
-            .is_some_and(|age| age.as_secs_f32() >= PROJECTILE_LIFETIME_SECONDS)
+            .is_some_and(|age| age.as_secs_f32() >= projectile.lifetime_seconds)
         {
             ctx.db.projectile().id().delete(projectile.id);
         } else {

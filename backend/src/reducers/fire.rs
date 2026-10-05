@@ -36,26 +36,29 @@ pub fn fire(
     }
 
     let properties = get_ship_properties(&source.ship_type);
-    let spread = (ctx.random::<f32>() * 2.0 - 1.0) * properties.accuracy;
-    let (sin, cos) = spread.sin_cos();
-    let (direction_x, direction_y) = (
-        direction_x * cos - direction_y * sin,
-        direction_x * sin + direction_y * cos,
-    );
+    for _ in 0..properties.projectile_count {
+        let spread = (ctx.random::<f32>() * 2.0 - 1.0) * properties.accuracy;
+        let (sin, cos) = spread.sin_cos();
+        let (direction_x, direction_y) = (
+            direction_x * cos - direction_y * sin,
+            direction_x * sin + direction_y * cos,
+        );
 
-    ctx.db.projectile().insert(Projectile {
-        id: 0,
-        world_id: source.world_id,
-        projectile_type: ProjectileType::Bullet,
-        x: source.x + direction_x * PROJECTILE_SPAWN_OFFSET,
-        y: source.y + direction_y * PROJECTILE_SPAWN_OFFSET,
-        vx: source.vx + direction_x * properties.projectile_speed,
-        vy: source.vy + direction_y * properties.projectile_speed,
-        owner,
-        ship: source.id,
-        damage: properties.damage,
-        created: ctx.timestamp,
-    });
+        ctx.db.projectile().insert(Projectile {
+            id: 0,
+            world_id: source.world_id,
+            projectile_type: ProjectileType::Bullet,
+            x: source.x + direction_x * PROJECTILE_SPAWN_OFFSET,
+            y: source.y + direction_y * PROJECTILE_SPAWN_OFFSET,
+            vx: source.vx + direction_x * properties.projectile_speed,
+            vy: source.vy + direction_y * properties.projectile_speed,
+            owner,
+            ship: source.id,
+            damage: properties.damage,
+            lifetime_seconds: properties.projectile_lifetime,
+            created: ctx.timestamp,
+        });
+    }
 
     Ok(())
 }
