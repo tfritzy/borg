@@ -12,6 +12,7 @@ export class Database {
     const connectPromise = new Promise<DbConnection>((resolve, reject) => {
       let settled = false;
       let builder = DbConnection.builder()
+        .withConfirmedReads(false)
         .withUri(
           import.meta.env.VITE_SPACETIMEDB_URI || "http://localhost:3000",
         )

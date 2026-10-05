@@ -6,6 +6,7 @@ import { Database } from "./util/db";
 import { subscribeToWorld } from "./util/subscriptions";
 import { watchProjectiles } from "./util/watchProjectiles";
 import { watchWorld } from "./util/watchWorld";
+import { UpdateTiming } from "./util/updateTiming";
 
 export class GameEngine {
   readonly world: World;
@@ -16,6 +17,7 @@ export class GameEngine {
   private remotePlayerController: RemotePlayerController | undefined;
   private unwatchProjectiles: (() => void) | undefined;
   private unwatchWorld: (() => void) | undefined;
+  private timing: UpdateTiming | undefined;
   private worldSubscription: SubscriptionHandle | undefined;
 
   constructor(world: World = new World(), database: Database = new Database()) {
@@ -23,9 +25,14 @@ export class GameEngine {
     this.database = database;
   }
 
-  start(render: (connectionIdentity: string | undefined) => void): void {
+  start(
+    render: (connectionIdentity: string | undefined) => void,
+    onFps?: (fps: number) => void,
+  ): void {
     if (this.active) return;
     this.active = true;
+    const timing = new UpdateTiming(onFps);
+    this.timing = timing;
 
     this.database
       .connect()
@@ -38,6 +45,7 @@ export class GameEngine {
         );
         this.unwatchProjectiles = watchProjectiles(connection, this.world);
         this.unwatchWorld = watchWorld(connection, this.world);
+        timing.watchConnection(connection, this.world.id);
         this.worldSubscription = subscribeToWorld(connection, this.world.id);
       })
       .catch((error: unknown) => {
@@ -48,6 +56,7 @@ export class GameEngine {
 
     const loop = (time: number) => {
       if (!this.active) return;
+      timing.beginFrame(time);
       this.world.time = time;
       this.playerController?.update(this.world.time);
       this.remotePlayerController?.update(this.world.time);
@@ -55,6 +64,7 @@ export class GameEngine {
         projectile.update(this.world.time);
       }
       render(this.database.db?.identity?.toHexString());
+      timing.endFrame();
       this.frameId = requestAnimationFrame(loop);
     };
     this.frameId = requestAnimationFrame(loop);
@@ -63,6 +73,8 @@ export class GameEngine {
   dispose(): void {
     if (!this.active) return;
     this.active = false;
+    this.timing?.dispose();
+    this.timing = undefined;
     this.playerController?.dispose();
     this.playerController = undefined;
     this.remotePlayerController?.dispose();

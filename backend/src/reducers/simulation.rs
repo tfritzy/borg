@@ -21,6 +21,7 @@ pub(crate) fn ensure_simulation_timer(ctx: &ReducerContext) {
             world_id: DEFAULT_WORLD_ID,
             scheduled_at: TimeDuration::from_micros(SERVER_UPDATE_INTERVAL_MICROS).into(),
             server_tick: 0,
+            last_update_micros: ctx.timestamp.to_micros_since_unix_epoch(),
         });
     }
 }
@@ -45,6 +46,7 @@ pub fn update_players(ctx: &ReducerContext, timer: SimulationTimer) -> Result<()
         .scheduled_id()
         .update(SimulationTimer {
             server_tick,
+            last_update_micros: now_micros,
             ..timer
         });
 
