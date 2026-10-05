@@ -3,6 +3,7 @@ use crate::tables::ship::ship_type::ShipType;
 #[derive(Clone, Copy, Debug, spacetimedb::SpacetimeType)]
 pub struct ShipProperties {
     pub projectile_speed: f32,
+    pub range: f32,
     pub damage: u32,
     pub thrust: f32,
     pub max_speed: f32,
@@ -17,6 +18,7 @@ pub(crate) const SHIP_PROPERTIES: [(ShipType, ShipProperties); 2] = [
         ShipType::Raven,
         ShipProperties {
             projectile_speed: 180.0,
+            range: 300.0,
             damage: 1,
             thrust: 120.0,
             max_speed: 60.0,
@@ -28,6 +30,7 @@ pub(crate) const SHIP_PROPERTIES: [(ShipType, ShipProperties); 2] = [
         ShipType::Gat,
         ShipProperties {
             projectile_speed: 150.0,
+            range: 250.0,
             damage: 2,
             thrust: 80.0,
             max_speed: 40.0,

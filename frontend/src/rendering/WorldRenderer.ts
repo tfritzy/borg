@@ -39,7 +39,7 @@ export class WorldRenderer {
     this.offset.y = y;
   }
 
-  render() {
+  render(connectionIdentity: string | undefined) {
     const { ctx, canvas } = this;
     const dpr = window.devicePixelRatio || 1;
     const width = canvas.width / dpr;
@@ -61,7 +61,7 @@ export class WorldRenderer {
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(Math.PI / 2 - entity.rotation);
-      this.ships.draw(ctx, entity);
+      this.ships.draw(ctx, entity, connectionIdentity);
       ctx.restore();
     }
 

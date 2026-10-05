@@ -11,7 +11,7 @@ export function Game() {
 
     const game = new GameEngine();
     const renderer = new WorldRenderer(canvas, game.world);
-    game.start(() => renderer.render());
+    game.start((connectionIdentity) => renderer.render(connectionIdentity));
 
     return () => {
       game.dispose();

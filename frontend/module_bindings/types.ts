@@ -82,6 +82,7 @@ export type ShipBehavior = __Infer<typeof ShipBehavior>;
 
 export const ShipProperties = __t.object("ShipProperties", {
   projectileSpeed: __t.f32(),
+  range: __t.f32(),
   damage: __t.u32(),
   thrust: __t.f32(),
   maxSpeed: __t.f32(),

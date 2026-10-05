@@ -3,7 +3,6 @@ import type { ShipEntity } from "../state/Ship";
 import type { World } from "../state/world";
 import type { Ship } from "../types";
 import { leadDirection } from "./aim";
-import { TYPING_RANGE } from "./consts";
 import { advance, STEP_MS, type MovementState } from "./movement";
 import { syncShipMetadata } from "./syncShipMetadata";
 
@@ -175,7 +174,7 @@ export class PlayerController {
       const dx = target.position.x - this.state.x;
       const dy = target.position.y - this.state.y;
       const distance = Math.hypot(dx, dy);
-      if (distance === 0 || distance > TYPING_RANGE) continue;
+      if (distance === 0 || distance > this.properties.range) continue;
 
       if (!target.label.type(key)) continue;
       const direction = leadDirection(this.state, target.row, this.properties.projectileSpeed);

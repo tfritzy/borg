@@ -21,7 +21,7 @@ export class GameEngine {
     this.database = database;
   }
 
-  start(render: () => void): void {
+  start(render: (connectionIdentity: string | undefined) => void): void {
     if (this.active) return;
     this.active = true;
 
@@ -30,7 +30,10 @@ export class GameEngine {
       .then((connection) => {
         if (!this.active) return;
         this.playerController = new PlayerController(connection, this.world);
-        this.remotePlayerController = new RemotePlayerController(connection, this.world);
+        this.remotePlayerController = new RemotePlayerController(
+          connection,
+          this.world,
+        );
         this.unwatchProjectiles = watchProjectiles(connection, this.world);
         this.worldSubscription = subscribeToWorld(connection, this.world.id);
       })
@@ -48,7 +51,7 @@ export class GameEngine {
       for (const projectile of this.world.projectiles.values()) {
         projectile.update(this.world.time);
       }
-      render();
+      render(this.database.db?.identity?.toHexString());
       this.frameId = requestAnimationFrame(loop);
     };
     this.frameId = requestAnimationFrame(loop);
