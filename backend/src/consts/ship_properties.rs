@@ -4,7 +4,6 @@ use crate::tables::ship::ship_type::ShipType;
 pub struct ShipProperties {
     pub projectile_speed: f32,
     pub projectile_lifetime: f32,
-    pub range: f32,
     pub damage: u32,
     pub projectile_count: u32,
     pub max_health: u32,
@@ -23,7 +22,6 @@ pub(crate) const SHIP_PROPERTIES: [(ShipType, ShipProperties); 5] = [
         ShipProperties {
             projectile_speed: 180.0,
             projectile_lifetime: 5.0 / 3.0,
-            range: 300.0,
             damage: 5,
             projectile_count: 1,
             max_health: 50,
@@ -39,7 +37,6 @@ pub(crate) const SHIP_PROPERTIES: [(ShipType, ShipProperties); 5] = [
         ShipProperties {
             projectile_speed: 150.0,
             projectile_lifetime: 5.0 / 3.0,
-            range: 250.0,
             damage: 2,
             projectile_count: 1,
             max_health: 5,
@@ -55,7 +52,6 @@ pub(crate) const SHIP_PROPERTIES: [(ShipType, ShipProperties); 5] = [
         ShipProperties {
             projectile_speed: 160.0,
             projectile_lifetime: 0.9375,
-            range: 150.0,
             damage: 3,
             projectile_count: 5,
             max_health: 65,
@@ -71,7 +67,6 @@ pub(crate) const SHIP_PROPERTIES: [(ShipType, ShipProperties); 5] = [
         ShipProperties {
             projectile_speed: 360.0,
             projectile_lifetime: 5.0 / 3.0,
-            range: 600.0,
             damage: 10,
             projectile_count: 1,
             max_health: 35,
@@ -87,7 +82,6 @@ pub(crate) const SHIP_PROPERTIES: [(ShipType, ShipProperties); 5] = [
         ShipProperties {
             projectile_speed: 200.0,
             projectile_lifetime: 1.2,
-            range: 240.0,
             damage: 3,
             projectile_count: 1,
             max_health: 30,

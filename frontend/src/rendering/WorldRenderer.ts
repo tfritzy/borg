@@ -33,7 +33,7 @@ export class WorldRenderer {
     this.canvas.height = Math.round(rect.height * dpr);
   }
 
-  render(connectionIdentity: string | undefined) {
+  render() {
     const { ctx, canvas } = this;
     this.world.camera.update(this.world);
     const dpr = window.devicePixelRatio || 1;
@@ -56,7 +56,7 @@ export class WorldRenderer {
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(Math.PI / 2 - entity.rotation);
-      this.ships.draw(ctx, entity, connectionIdentity);
+      this.ships.draw(ctx, entity);
       ctx.restore();
     }
 

@@ -17,22 +17,7 @@ export class ShipRenderer {
   draw(
     ctx: CanvasRenderingContext2D,
     entity: ShipEntity,
-    connectionIdentity?: string,
   ): void {
-    if (
-      connectionIdentity &&
-      entity.row.owner?.toHexString() === connectionIdentity &&
-      entity.row.properties.range > 0
-    ) {
-      ctx.save();
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.08)";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(0, 0, entity.row.properties.range, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
-
     const sprite = shipSprites[entity.shipType];
     const image = this.images.get(sprite.src);
     if (image?.complete && image.naturalWidth > 0) {

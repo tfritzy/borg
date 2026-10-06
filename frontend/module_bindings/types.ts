@@ -88,7 +88,6 @@ export type ShipBehavior = __Infer<typeof ShipBehavior>;
 export const ShipProperties = __t.object("ShipProperties", {
   projectileSpeed: __t.f32(),
   projectileLifetime: __t.f32(),
-  range: __t.f32(),
   damage: __t.u32(),
   projectileCount: __t.u32(),
   maxHealth: __t.u32(),
@@ -115,6 +114,7 @@ export const SimulationTimer = __t.object("SimulationTimer", {
   worldId: __t.u64(),
   scheduledAt: __t.scheduleAt(),
   serverTick: __t.u64(),
+  lastUpdateMicros: __t.i64(),
 });
 export type SimulationTimer = __Infer<typeof SimulationTimer>;
 

@@ -3,3 +3,5 @@ export const INTERPOLATION_DELAY_MS = 150;
 export const MAX_SNAPSHOTS = 32;
 // Keep this aligned with backend/src/reducers/fire.rs.
 export const PROJECTILE_SPAWN_OFFSET = 16;
+// Shared typing distance, independent of projectile travel distance.
+export const TYPING_RANGE = 2_000;

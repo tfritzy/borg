@@ -46,7 +46,7 @@ pub fn update_players(ctx: &ReducerContext, timer: SimulationTimer) -> Result<()
         .scheduled_id()
         .update(SimulationTimer {
             server_tick,
-            last_update_micros: now_micros,
+            last_update_micros: ctx.timestamp.to_micros_since_unix_epoch(),
             ..timer
         });
 
