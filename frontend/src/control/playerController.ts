@@ -181,19 +181,31 @@ export class PlayerController {
   private typeCharacter(key: string): void {
     if (!this.ship || !this.state || !this.properties || !this.connection.isActive || document.hidden) return;
 
+    const alpha = this.accumulatedMs / STEP_MS;
+    const previous = this.previousState ?? this.state;
+    const source = {
+      x: this.ship.position.x,
+      y: this.ship.position.y,
+      vx: previous.vx + (this.state.vx - previous.vx) * alpha,
+      vy: previous.vy + (this.state.vy - previous.vy) * alpha,
+    };
     for (const target of this.world.entities.values()) {
       if (target === this.ship || !target.label) continue;
-      const dx = target.position.x - this.state.x;
-      const dy = target.position.y - this.state.y;
+      const dx = target.position.x - source.x;
+      const dy = target.position.y - source.y;
       const distance = Math.hypot(dx, dy);
       if (distance === 0 || distance > TYPING_RANGE) continue;
 
       if (!target.label.type(key)) continue;
-      const direction = leadDirection(this.state, target.row, this.properties.projectileSpeed);
+      const direction = leadDirection(source, target.row, this.properties.projectileSpeed);
       void this.connection.reducers.fire({
         shipId: BigInt(this.ship.id),
         directionX: direction.x,
         directionY: direction.y,
+        sourceX: source.x,
+        sourceY: source.y,
+        sourceVx: source.vx,
+        sourceVy: source.vy,
       });
     }
   }

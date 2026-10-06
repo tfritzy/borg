@@ -14,4 +14,8 @@ export default {
   shipId: __t.u64(),
   directionX: __t.f32(),
   directionY: __t.f32(),
+  sourceX: __t.f32(),
+  sourceY: __t.f32(),
+  sourceVx: __t.f32(),
+  sourceVy: __t.f32(),
 };

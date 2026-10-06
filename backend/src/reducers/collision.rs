@@ -10,7 +10,9 @@ pub(crate) fn grid_cell(position: f32) -> i32 {
 pub(crate) fn first_ship_hit(ctx: &ReducerContext, projectile: &Projectile) -> Option<u64> {
     let grid_x = grid_cell(projectile.x);
     let grid_y = grid_cell(projectile.y);
-    for ship in ctx.db.ship().grid_cell().filter((grid_x, grid_y)) {
+    for ship in (grid_x - 1..=grid_x + 1).flat_map(|x| {
+        (grid_y - 1..=grid_y + 1).flat_map(move |y| ctx.db.ship().grid_cell().filter((x, y)))
+    }) {
         if ship.world_id != projectile.world_id
             || ship.id == projectile.ship
             || ship.owner == Some(projectile.owner)

@@ -12,14 +12,25 @@ pub fn fire(
     ship_id: u64,
     direction_x: f32,
     direction_y: f32,
+    source_x: f32,
+    source_y: f32,
+    source_vx: f32,
+    source_vy: f32,
 ) -> Result<(), String> {
     if !direction_x.is_finite() || !direction_y.is_finite() {
         return Err("Projectile direction must be finite".into());
     }
 
+    if ![source_x, source_y, source_vx, source_vy]
+        .iter()
+        .all(|value| value.is_finite())
+    {
+        return Err("Projectile source motion must be finite".into());
+    }
+
     let length = direction_x.hypot(direction_y);
-    if length == 0.0 {
-        return Err("Projectile direction must not be zero".into());
+    if length == 0.0 || !length.is_finite() {
+        return Err("Projectile direction must have a finite, nonzero length".into());
     }
     let direction_x = direction_x / length;
     let direction_y = direction_y / length;
@@ -48,10 +59,10 @@ pub fn fire(
             id: 0,
             world_id: source.world_id,
             projectile_type: ProjectileType::Bullet,
-            x: source.x + direction_x * PROJECTILE_SPAWN_OFFSET,
-            y: source.y + direction_y * PROJECTILE_SPAWN_OFFSET,
-            vx: source.vx + direction_x * properties.projectile_speed,
-            vy: source.vy + direction_y * properties.projectile_speed,
+            x: source_x + direction_x * PROJECTILE_SPAWN_OFFSET,
+            y: source_y + direction_y * PROJECTILE_SPAWN_OFFSET,
+            vx: source_vx + direction_x * properties.projectile_speed,
+            vy: source_vy + direction_y * properties.projectile_speed,
             owner,
             ship: source.id,
             damage: properties.damage,
